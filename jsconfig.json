@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "typeRoots": [
+            "./node_modules/@types",
+            "./src/types"
+        ],
+        "target": "ESNext",
+        "module": "ESNext",
+        "baseUrl": "./src",
+        "paths": {
+            "~/*": [
+                "./node_modules/*"
+            ],
+            "src/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

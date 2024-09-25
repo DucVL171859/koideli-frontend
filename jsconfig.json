@@ -1,20 +1,8 @@
 {
     "compilerOptions": {
-        "typeRoots": [
-            "./node_modules/@types",
-            "./src/types"
-        ],
         "target": "ESNext",
-        "module": "ESNext",
+        "module": "CommonJS",
         "baseUrl": "./src",
-        "paths": {
-            "~/*": [
-                "./node_modules/*"
-            ],
-            "src/*": [
-                "./src/*"
-            ]
-        }
     },
     "include": [
         "src/**/*"

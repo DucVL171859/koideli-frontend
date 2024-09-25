@@ -6,11 +6,11 @@ import { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import MainCard from '../../../../../components/MainCard';
-import Avatar from '../../../../../components/@extended/Avatar';
-import Transitions from '../../../../../components/@extended/Transitions';
+import MainCard from 'components/MainCard';
+import Avatar from 'components/@extended/Avatar';
+import Transitions from 'components/@extended/Transitions';
 
-import avatar1 from '../../../../../assets/images/logo.png';
+import avatar1 from 'assets/images/koideli-logo.png';
 import { LogoutOutlined } from '@mui/icons-material';
 
 function TabPanel({ children, value, index, ...other }) {

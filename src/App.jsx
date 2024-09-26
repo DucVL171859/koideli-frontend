@@ -6,5 +6,5 @@ function App() {
     <RouterProvider router={router} />
   )
 }
-// test git 2
+// testing  home page
 export default App

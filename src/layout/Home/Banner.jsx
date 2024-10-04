@@ -65,8 +65,8 @@ const Banner = () => {
                             mạnh và đầy màu sắc. Liên hệ ngay để đặt hàng!
                           </p>
                           <div className="btn-wrapper">
-                            <a href="#" className="boxed-btn">
-                              <span>Liên hệ giao hàng</span>
+                            <a href="/create-order" className="boxed-btn">
+                              <span>Tạo Đơn Hàng</span>
                             </a>
                           </div>
                         </div>
@@ -123,7 +123,7 @@ const Banner = () => {
                             toàn trong mọi lô hàng cá Koi bạn đặt.
                           </p>
                           <div className="btn-wrapper">
-                            <a href="#" className="boxed-btn">
+                            <a href="/create-order" className="boxed-btn">
                               <span>Liên hệ giao hàng</span>
                             </a>
                           </div>
@@ -181,7 +181,7 @@ const Banner = () => {
                             mạnh và đẹp mắt.
                           </p>
                           <div className="btn-wrapper">
-                            <a href="#" className="boxed-btn">
+                            <a href="/create-order" className="boxed-btn">
                               <span>Liên hệ giao hàng</span>
                             </a>
                           </div>
@@ -237,7 +237,7 @@ const Banner = () => {
                             toàn cao nhất cho mỗi chú cá.
                           </p>
                           <div className="btn-wrapper">
-                            <a href="#" className="boxed-btn">
+                            <a href="/create-order" className="boxed-btn">
                               <span>Liên hệ giao hàng</span>
                             </a>
                           </div>

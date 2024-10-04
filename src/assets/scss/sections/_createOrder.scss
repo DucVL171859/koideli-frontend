@@ -1,0 +1,117 @@
+.create-order-page {
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+  }
+  
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .form-section {
+    margin-bottom: 20px;
+  }
+  
+  .form-section h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .form-section input,
+  select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .address-inputs input {
+    width: 32%;
+    display: inline-block;
+    margin-right: 1%;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 10px;
+  }
+  
+  .product-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .product-item input {
+    width: 30%;
+  }
+  
+  .add-item-btn {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    border: 1px solid #0d6efd;
+    background-color: transparent;
+    color: #0d6efd;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .add-item-btn:hover {
+    background-color: #0d6efd;
+    color: white;
+  }
+  
+  .submit-section {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .submit-section button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .save-draft-btn {
+    background-color: #ffc107;
+    color: white;
+  }
+  
+  .submit-order-btn {
+    background-color: #28a745;
+    color: white;
+  }
+  .form-section p {
+    font-size: 16px;
+    font-weight: bold;
+    color: #28a745;
+  }
+  
+  .add-item-btn,
+  .delete-item-btn {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    border: 1px solid #0d6efd;
+    background-color: transparent;
+    color: #0d6efd;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-left: 10px;
+  }
+  
+  .add-item-btn:hover,
+  .delete-item-btn:hover {
+    background-color: #0d6efd;
+    color: white;
+  }
+    

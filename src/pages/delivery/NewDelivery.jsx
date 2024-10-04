@@ -13,69 +13,69 @@ import {
 import MainCard from "components/MainCard";
 import { useNavigate } from "react-router-dom";
 
-const newOrders = [
+const newDelivery = [
   {
     id: 1,
-    senderName: "Alice Smith",
+    senderName: "Delivery Staff",
     senderPhone: "123-456-7890",
-    receiverName: "Bob Johnson",
+    receiverName: "Mr A",
     receiverPhone: "098-765-4321",
     address: "123 Pond Lane, Fishville",
     quantity: 10,
-    status: "Incomplete",
+    status: "Destination",
   },
   {
     id: 2,
-    senderName: "John Doe",
+    senderName: "Delivery Staff",
     senderPhone: "234-567-8901",
-    receiverName: "Jane Doe",
+    receiverName: "Mr B",
     receiverPhone: "345-678-9012",
     address: "456 Waterway Ave, Aquatown",
     quantity: 5,
-    status: "Incomplete",
+    status: "Destination",
   },
 ];
 
 const ordersInProcess = [
   {
     id: 1,
-    senderName: "Le Duc",
+    senderName: "Delivery Staff",
     senderPhone: "123-456-7890",
     receiverName: "Hoang Anh",
     receiverPhone: "098-765-4321",
     address: "Nha van hoa sinh vien, Binh Duong",
     quantity: 7,
-    status: "Accepted",
+    status: "Delivered",
   },
   {
     id: 2,
-    senderName: "Quang Bui",
+    senderName: "Delivery Staff",
     senderPhone: "234-567-8901",
-    receiverName: "Son",
+    receiverName: "Tran Tam",
     receiverPhone: "345-678-9012",
     address: "Vinhome GrandPark Quan 9",
     quantity: 3,
-    status: "Received",
+    status: "Delivered",
   },
 ];
 
-const NewOrders = () => {
+const NewDelivery = () => {
   const navigate = useNavigate();
   const handleExecuteOrder = () => {
-    navigate("/sale/order-checking");
+    navigate("/delivery/delivery-tracking");
   };
 
   const handleUpdateOrder = () => {
-    navigate("/sale/order-update");
+    navigate("/delivery/delivery-update");
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Incomplete":
+      case "Received ":
         return "#00d8ff";
-      case "Accepted":
+      case "Destination ":
         return "#bfbf2d";
-      case "Received":
+      case "Delivered":
         return "#5ccb26";
       default:
         return "gray";
@@ -84,7 +84,7 @@ const NewOrders = () => {
 
   return (
     <>
-      <MainCard title="New Orders">
+      <MainCard title="Delivery Destination">
         <TableContainer component={Paper}>
           <Table>
             <TableHead sx={{ bgcolor: "#272242" }}>
@@ -110,7 +110,7 @@ const NewOrders = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {newOrders.map((order) => (
+              {newDelivery.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell>{`${order.senderName} / ${order.senderPhone}`}</TableCell>
                   <TableCell>{`${order.receiverName} / ${order.receiverPhone}`}</TableCell>
@@ -136,7 +136,7 @@ const NewOrders = () => {
                       onClick={() => handleExecuteOrder(order.id)}
                       sx={{ bgcolor: "#272242", color: "#FFF" }}
                     >
-                      Execute
+                      Check
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -145,7 +145,7 @@ const NewOrders = () => {
           </Table>
         </TableContainer>
       </MainCard>
-      <MainCard title="Orders In Process" sx={{ marginTop: "20px" }}>
+      <MainCard title="Delivered" sx={{ marginTop: "20px" }}>
         <TableContainer component={Paper}>
           <Table>
             <TableHead sx={{ bgcolor: "#272242" }}>
@@ -194,10 +194,10 @@ const NewOrders = () => {
                   <TableCell>
                     <Button
                       variant="contained"
-                      onClick={() => handleUpdateOrder(order.id)}
+                      // onClick={() => handleUpdateOrder(order.id)}
                       sx={{ bgcolor: "#272242", color: "#FFF" }}
                     >
-                      Update
+                      Done
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -210,4 +210,4 @@ const NewOrders = () => {
   );
 };
 
-export default NewOrders;
+export default NewDelivery;

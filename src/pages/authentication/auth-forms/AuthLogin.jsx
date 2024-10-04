@@ -67,16 +67,14 @@ const AuthLogin = () => {
         event.preventDefault();
         const loginUser = { ...formData };
 
-        try {
-            let isValid = await checkCredentials(loginUser);
-            if (isValid.status === 200) {
-                console.log(isValid);
-                console.log(JSON.stringify(isValid.data));
-                let data = isValid.data;
-                dispatch(loginAction(data.username))
-            }
-        } catch (error) {
-            return error;
+        if (loginUser.email.includes('customer')) {
+            navigate('/');
+        }
+        else if (loginUser.email.includes('sale')) {
+            navigate('/sale/welcome');
+        }
+        else if (loginUser.email.includes('delivery')) {
+            navigate('/register');
         }
     }
 

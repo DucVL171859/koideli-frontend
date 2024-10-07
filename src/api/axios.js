@@ -1,14 +1,14 @@
 import axios from "axios"
 import authHeader from "services/authHeaderServices";
 
-const api = axios.create({
+const config = axios.create({
     baseURL: 'https://koideli.azurewebsites.net',
     headers: {
         'Content-Type': 'application/json',
     }
 });
 
-api.interceptors.request.use(
+config.interceptors.request.use(
     (config) => {
         let token = authHeader().Authorization;
         if (token) config.headers['Authorization'] = token;
@@ -19,4 +19,4 @@ api.interceptors.request.use(
     }
 )
 
-export default api;
+export default config;

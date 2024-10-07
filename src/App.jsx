@@ -1,13 +1,10 @@
-import { RouterProvider } from 'react-router-dom'
-import router from './routes'
+import { RouterProvider } from "react-router-dom";
+import router from "./routes";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from "react";
 import ScrollToTop from "react-scroll-to-top";
-
-function App(
-  
-) {
+function App() {
   useEffect(() => {
     AOS.init({
       offset: 0,
@@ -16,11 +13,7 @@ function App(
     });
     AOS.refresh();
   }, []);
-  return (
-    
-    <RouterProvider router={router} />
-    
-  )
+  return <RouterProvider router={router} />;
 }
 
-export default App
+export default App;

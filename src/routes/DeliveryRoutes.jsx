@@ -6,14 +6,11 @@ const DeliveryPage = Loadable(
   lazy(() => import("pages/delivery/DeliveryPage"))
 );
 const NewDelivery = Loadable(lazy(() => import("pages/delivery/NewDelivery")));
-const CheckingDelivery = Loadable(
-  lazy(() => import("pages/sale/OrderChecking"))
-);
 const DeliveryTracking = Loadable(
   lazy(() => import("pages/delivery/DeliveryTracking"))
 );
-const CompleteDelivery = Loadable(
-  lazy(() => import("pages/sale/CompleteOrders"))
+const DeliveryCancel = Loadable(
+  lazy(() => import("pages/delivery/DeliveryCancel"))
 );
 const DeliveryUpdate = Loadable(
   lazy(() => import("pages/delivery/DeliveryUpdate"))
@@ -31,7 +28,7 @@ const DeliveryRoutes = {
       element: <DeliveryPage />,
     },
     {
-      path: "new-delivery",
+      path: "delivery-checking",
       element: <NewDelivery />,
     },
     {
@@ -44,12 +41,8 @@ const DeliveryRoutes = {
       element: <DeliveryTracking />,
     },
     {
-      path: "order-checking",
-      element: <CheckingDelivery />,
-    },
-    {
-      path: "complete-delivery",
-      element: <CompleteDelivery />,
+      path: "delivery-cancel",
+      element: <DeliveryCancel />,
     },
     {
       path: "blogs",

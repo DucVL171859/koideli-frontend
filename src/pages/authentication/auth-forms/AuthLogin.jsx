@@ -107,7 +107,7 @@ const AuthLogin = () => {
               value={email}
               name="email"
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder="Nhập Email của bạn"
               fullWidth
               error={Boolean(touched.email && errors.email)}
             />
@@ -118,7 +118,7 @@ const AuthLogin = () => {
         </Grid>
         <Grid item xs={12}>
           <Stack spacing={1}>
-            <InputLabel htmlFor="password-login">Password</InputLabel>
+            <InputLabel htmlFor="password-login">Mật Khẩu</InputLabel>
             <OutlinedInput
               fullWidth
               id="password-login"
@@ -142,7 +142,7 @@ const AuthLogin = () => {
                   </IconButton>
                 </InputAdornment>
               }
-              placeholder="Enter your password"
+              placeholder="Nhập Mật Khẩu"
             />
             {touched.password && errors.password && (
               <FormHelperText error>{errors.password}</FormHelperText>
@@ -163,7 +163,7 @@ const AuthLogin = () => {
             variant="contained"
             color="primary"
           >
-            Login
+            ĐĂNG NHẬP
           </Button>
         </Grid>
       </Grid>

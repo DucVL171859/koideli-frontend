@@ -84,17 +84,17 @@ const NewOrders = () => {
 
     return (
         <>
-            <MainCard title="New Orders">
+            <MainCard title="Đơn hàng mới">
                 <TableContainer component={Paper}>
                     <Table>
                         <TableHead sx={{ bgcolor: '#272242' }}>
                             <TableRow>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Sender</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Receiver</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Delivery Address</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Quantity</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Status</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Action</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người gửi</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người nhận</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Địa chỉ người nhận</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Số lượng cá</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Trạng thái</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Hành động</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -124,7 +124,7 @@ const NewOrders = () => {
                                             onClick={() => handleExecuteOrder(order.id)}
                                             sx={{ bgcolor: '#272242', color: '#FFF' }}
                                         >
-                                            Execute
+                                            Xử lý
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -133,17 +133,17 @@ const NewOrders = () => {
                     </Table>
                 </TableContainer>
             </MainCard>
-            <MainCard title="Orders In Process" sx={{ marginTop: '20px' }}>
+            <MainCard title="Đơn hàng đang xử lý" sx={{ marginTop: '20px' }}>
                 <TableContainer component={Paper}>
                     <Table>
                         <TableHead sx={{ bgcolor: '#272242' }}>
                             <TableRow>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Sender</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Receiver</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Delivery Address</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Quantity</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Status</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Action</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người gửi</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người nhận</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Địa chỉ người nhận</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Số lượng cá</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Trạng thái</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Hành động</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -173,7 +173,7 @@ const NewOrders = () => {
                                             onClick={() => handleUpdateOrder(order.id)}
                                             sx={{ bgcolor: '#272242', color: '#FFF' }}
                                         >
-                                            Update
+                                            Cập nhật
                                         </Button>
                                     </TableCell>
                                 </TableRow>

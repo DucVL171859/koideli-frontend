@@ -4,13 +4,15 @@ import HomeRoutes from './HomeRoutes';
 import LoginRoutes from './LoginRoutes';
 import RegisterRoutes from './RegisterRoutes';
 import SaleRoutes from './SaleRoutes';
+import ManagerRoutes from './ManagerRoutes';
 
 const router = createBrowserRouter([
     AdminRoutes,
     HomeRoutes,
     LoginRoutes,
     RegisterRoutes,
-    SaleRoutes
+    SaleRoutes,
+    ManagerRoutes
 ], {
     basename: '/'
 });

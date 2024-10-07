@@ -1,8 +1,8 @@
 import axios from "axios"
-import authHeader from "../services/authHeaderServices";
+import authHeader from "services/authHeaderServices";
 
 const api = axios.create({
-    baseURL: 'https://vpack-ecomerce.onrender.com',
+    baseURL: 'https://koideli.azurewebsites.net',
     headers: {
         'Content-Type': 'application/json',
     }

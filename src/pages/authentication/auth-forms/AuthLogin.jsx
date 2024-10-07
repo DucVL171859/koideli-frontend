@@ -4,13 +4,10 @@ import SocialLogin from './SocialLogin';
 
 import { Button, Checkbox, Divider, FormControlLabel, FormHelperText, Grid, Link, InputAdornment, IconButton, InputLabel, OutlinedInput, Stack, Typography } from '@mui/material';
 import { VisibilityOutlined, VisibilityOffOutlined } from '@mui/icons-material';
-import { useDispatch } from 'react-redux';
-import { loginAction } from 'redux/auth/actions';
 import authServices from 'services/authServices';
 
 const AuthLogin = () => {
     const navigate = useNavigate();
-    const dispatch = useDispatch();
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -65,26 +62,15 @@ const AuthLogin = () => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        const loginUser = { ...formData };
+        const loginUser = { email: formData.email, password: formData.password };
 
-        if (loginUser.email.includes('customer')) {
-            navigate('/');
-        }
-        else if (loginUser.email.includes('sale')) {
-            navigate('/sale/welcome');
-        }
-        else if (loginUser.email.includes('delivery')) {
-            navigate('/register');
-        }
-    }
-
-    const checkCredentials = async (loginData) => {
         try {
-            let resOfAuth = await authServices.login(loginData);
-            if (resOfAuth) return resOfAuth;
-            else TurnLeft;
+            let resOfLogin = await authServices.login(loginUser);
+            if (resOfLogin) {
+                console.log(resOfLogin);
+            }
         } catch (error) {
-            return error;
+            console.log(error);
         }
     }
 

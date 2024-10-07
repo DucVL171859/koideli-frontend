@@ -1,5 +1,5 @@
 const authHeader = () => {
-    let user = sessionStorage.getItem("username");
+    let user = sessionStorage.getItem("currentUser");
     let token = JSON.parse(sessionStorage.getItem("token"));
 
     if (user && token) {

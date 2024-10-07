@@ -3,7 +3,6 @@ import { ButtonBase, CardContent, ClickAwayListener, Grid, Paper, IconButton, Po
 
 import PropTypes from 'prop-types';
 import { useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import MainCard from 'components/MainCard';
@@ -12,6 +11,7 @@ import Transitions from 'components/@extended/Transitions';
 
 import avatar1 from 'assets/images/koideli-logo.png';
 import { LogoutOutlined } from '@mui/icons-material';
+import authServices from 'services/authServices';
 
 function TabPanel({ children, value, index, ...other }) {
     return (
@@ -23,9 +23,8 @@ function TabPanel({ children, value, index, ...other }) {
 
 export default function Profile() {
     const theme = useTheme();
-    const username = useSelector((state) => state.auth.currentUser);
-    const role = useSelector((state) => state.auth.roles);
-    const dispatch = useDispatch();
+    const username = sessionStorage.getItem('currentUser');
+    const role = sessionStorage.getItem('role');
     const navigate = useNavigate();
 
     const anchorRef = useRef(null);
@@ -35,7 +34,7 @@ export default function Profile() {
     };
 
     const handleLogout = () => {
-        dispatch(logoutAction());
+        authServices.logout();
         navigate('/login');
     }
 

@@ -45,7 +45,6 @@ const AuthLogin = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const { email, password } = formData;
 
     try {
       // Call login API and get the response data
@@ -53,18 +52,37 @@ const AuthLogin = () => {
 
       if (resOfLogin && resOfLogin.token) {
         const token = resOfLogin.token;
-        sessionStorage.setItem("sessionToken", token);
+        sessionStorage.setItem("token", token);
 
         // Decode the JWT token
         if (typeof token === "string") {
           const decodedToken = jwtDecode(token);
           console.log("Decoded JWT:", decodedToken);
 
+          const id = decodedToken.Id;
+
+          const role =
+            decodedToken[
+              "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+            ];
+
           // Optionally store decoded token in sessionStorage
-          sessionStorage.setItem("user", JSON.stringify(decodedToken));
+          sessionStorage.setItem("userId", id); // Store userId
+          sessionStorage.setItem("role", role); // Store role
+          sessionStorage.setItem("token", token); // Store token
 
           // Redirect to the homepage after login
-          navigate("/");
+          if (role === "User") {
+            navigate("/");
+          } else if (role === "Sales Staff") {
+            navigate("/sale/welcome");
+          } else if (role === "Delivery Staff") {
+            navigate("/delivery");
+          } else if (role === "Manager") {
+            navigate("/manager/welcome");
+          } else if (role === "Admin") {
+            navigate("/admin/dashboard");
+          }
         } else {
           console.log("Token is not a valid string");
           setFormData((prevData) => ({
@@ -94,7 +112,6 @@ const AuthLogin = () => {
   };
 
   const { email, password, showPassword, errors, touched } = formData;
-
   return (
     <form noValidate onSubmit={handleSubmit}>
       <Grid container spacing={3}>

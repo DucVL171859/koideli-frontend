@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
@@ -8,6 +8,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { styled } from "@mui/material/styles";
 import Logo from "components/logo/LogoMain"; // Assuming this is your logo component
 import { useNavigate } from "react-router-dom";
+import authServices from "services/authServices";
 
 const RightSection = styled("div")(() => ({
   display: "flex",
@@ -27,17 +28,16 @@ const Header = () => {
 
   // Check if user is logged in by looking for a token (or other flag) in sessionStorage
   useEffect(() => {
-    const token = sessionStorage.getItem("sessionToken"); // Check for the token
-    const userData = sessionStorage.getItem("user"); // Retrieve stored user data
-    if (token && userData) {
+    const token = sessionStorage.getItem("token"); // Check for the token
+    const userRole = sessionStorage.getItem("role"); // Retrieve stored user data
+    if (token && userRole) {
       setIsLoggedIn(true);
-      setUser(JSON.parse(userData)); // Parse and set user data from session storage
+      setUser(userRole); // Parse and set user data from session storage
     }
   }, []);
 
   const handleLogout = () => {
-    sessionStorage.removeItem("sessionToken"); // Remove the auth token from sessionStorage
-    sessionStorage.removeItem("user"); // Remove user data
+    authServices.logout();
     setIsLoggedIn(false); // Update the login state
     setAnchorEl(null); // Close the menu
     navigate("/"); // Optionally redirect to home or login page
@@ -67,11 +67,19 @@ const Header = () => {
       <Toolbar>
         <Logo />
         <RightSection>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>DỊCH VỤ</NavButton>
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>
+            DỊCH VỤ
+          </NavButton>
           <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>BLOG</NavButton>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>BẢNG GIÁ</NavButton>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>VỀ CHÚNG TÔI</NavButton>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>LIÊN HỆ</NavButton>
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>
+            BẢNG GIÁ
+          </NavButton>
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>
+            VỀ CHÚNG TÔI
+          </NavButton>
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>
+            LIÊN HỆ
+          </NavButton>
 
           {isLoggedIn ? (
             <>
@@ -79,12 +87,23 @@ const Header = () => {
                 <>
                   <Avatar
                     // alt={user.name} // Display user name as alt text
-                    src={user.avatarUrl || "https://firebasestorage.googleapis.com/v0/b/koideli.appspot.com/o/user-avt%2F819RNP-RSJL._SL1500_.jpg?alt=media&token=caedd232-d225-488a-bb75-9e3378b7af0d"}
-                    sx={{ bgcolor: "#7d6e48", marginLeft: 2, cursor: "pointer" }}
+                    src={
+                      user.avatarUrl ||
+                      "https://firebasestorage.googleapis.com/v0/b/koideli.appspot.com/o/user-avt%2F819RNP-RSJL._SL1500_.jpg?alt=media&token=caedd232-d225-488a-bb75-9e3378b7af0d"
+                    }
+                    sx={{
+                      bgcolor: "#7d6e48",
+                      marginLeft: 2,
+                      cursor: "pointer",
+                    }}
                     onClick={handleMenu} // Open the menu on click
                   >
-                    {!user.avatarUrl } {/* Show initial if no avatar && user.name[0] */}
+                    {!user.avatarUrl && user.name
+                      ? user.name[0].toUpperCase()
+                      : null}
+                    {/* Show the first initial of the name if no avatar is available */}
                   </Avatar>
+
                   <Menu
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
@@ -98,8 +117,12 @@ const Header = () => {
                       horizontal: "right",
                     }}
                   >
-                    <MenuItem onClick={() => navigate("/profile")}>Hồ sơ cá nhân</MenuItem>
-                    <MenuItem onClick={() => navigate("/orders")}>Đơn hàng của tôi</MenuItem>
+                    <MenuItem onClick={() => navigate("/profile")}>
+                      Hồ sơ cá nhân
+                    </MenuItem>
+                    <MenuItem onClick={() => navigate("/orders")}>
+                      Đơn hàng của tôi
+                    </MenuItem>
                     <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
                   </Menu>
                 </>

@@ -77,7 +77,7 @@ const AuthLogin = () => {
           } else if (role === "Sales Staff") {
             navigate("/sale/welcome");
           } else if (role === "Delivery Staff") {
-            navigate("/delivery");
+            navigate("/delivery/welcome");
           } else if (role === "Manager") {
             navigate("/manager/welcome");
           } else if (role === "Admin") {

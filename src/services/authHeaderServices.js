@@ -1,12 +1,11 @@
 const authHeader = () => {
-    let user = sessionStorage.getItem("username");
-    let token = JSON.parse(sessionStorage.getItem("token"));
+  let token = sessionStorage.getItem("token"); // Token should already be a string
 
-    if (user && token) {
-        return { Authorization: `Bearer ${token}` };
-    } else {
-        return {};
-    }
-}
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  } else {
+    return {};
+  }
+};
 
 export default authHeader;

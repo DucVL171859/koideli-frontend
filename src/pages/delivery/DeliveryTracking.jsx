@@ -93,10 +93,6 @@ const OrderDetail = () => {
             <strong>Destination:</strong> Frankfurt
           </p>
           <div className="progress-bar">
-            <span>Package Shipped</span>
-            <div className="progress">
-              <div className="progress-fill" />
-            </div>
             <span>Estimated Package Received</span>
           </div>
           <p>

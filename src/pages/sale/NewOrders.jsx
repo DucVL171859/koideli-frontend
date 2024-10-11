@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Table,
     TableBody,
@@ -12,6 +12,8 @@ import {
 } from '@mui/material';
 import MainCard from 'components/MainCard';
 import { useNavigate } from 'react-router-dom';
+import orderServices from 'services/orderServices';
+import boxOptionServices from 'services/boxOptionServices';
 
 const newOrders = [
     {
@@ -61,6 +63,25 @@ const ordersInProcess = [
 
 const NewOrders = () => {
     const navigate = useNavigate();
+    const [order, setOrder] = useState();
+
+    useEffect(() => {
+        const getOrder = async () => {
+            let resOfOrder = await orderServices.getOrder();
+            if (resOfOrder) {
+                let orderData = resOfOrder.data.data;
+                setOrder(orderData);
+            }
+        }
+
+        const getKoiFish = async () => {
+            let resOfKoiFish = await boxOptionServices.getBoxOption();
+        }
+
+        getOrder();
+        getKoiFish();
+    }, []);
+
     const handleExecuteOrder = () => {
         navigate('/sale/order-checking');
     };
@@ -89,7 +110,6 @@ const NewOrders = () => {
                     <Table>
                         <TableHead sx={{ bgcolor: '#272242' }}>
                             <TableRow>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người gửi</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người nhận</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Địa chỉ người nhận</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Số lượng cá</TableCell>
@@ -100,7 +120,6 @@ const NewOrders = () => {
                         <TableBody>
                             {newOrders.map((order) => (
                                 <TableRow key={order.id}>
-                                    <TableCell>{`${order.senderName} / ${order.senderPhone}`}</TableCell>
                                     <TableCell>{`${order.receiverName} / ${order.receiverPhone}`}</TableCell>
                                     <TableCell>{order.address}</TableCell>
                                     <TableCell>{order.quantity}</TableCell>
@@ -138,7 +157,6 @@ const NewOrders = () => {
                     <Table>
                         <TableHead sx={{ bgcolor: '#272242' }}>
                             <TableRow>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người gửi</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người nhận</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Địa chỉ người nhận</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Số lượng cá</TableCell>
@@ -149,7 +167,6 @@ const NewOrders = () => {
                         <TableBody>
                             {ordersInProcess.map((order) => (
                                 <TableRow key={order.id}>
-                                    <TableCell>{`${order.senderName} / ${order.senderPhone}`}</TableCell>
                                     <TableCell>{`${order.receiverName} / ${order.receiverPhone}`}</TableCell>
                                     <TableCell>{order.address}</TableCell>
                                     <TableCell>{order.quantity}</TableCell>

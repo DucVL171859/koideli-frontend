@@ -5,6 +5,12 @@
     @include transition($transition);
 }
 
+@mixin typography($font-weight: 400) {
+    font-family: 'Roboto', sans-serif;
+    font-weight: $font-weight;
+}
+
+
 @mixin gradient-border($left, $right) {
     -moz-border-image: -moz-linear-gradient(top, $left 0%, $right 100%);
     -webkit-border-image: -webkit-linear-gradient(top, $left 0%, $right 100%);
@@ -20,9 +26,9 @@
 }
 
 @mixin gradient-left-right($leftColor, $rightColor) {
-    background-image: -moz-linear-gradient( 0deg, $leftColor 0%, $rightColor 100%);
-    background-image: -webkit-linear-gradient( 0deg, $leftColor 0%, $rightColor 100%);
-    background-image: -ms-linear-gradient( 0deg, $leftColor 0%, $rightColor 100%);
+    background-image: -moz-linear-gradient(0deg, $leftColor 0%, $rightColor 100%);
+    background-image: -webkit-linear-gradient(0deg, $leftColor 0%, $rightColor 100%);
+    background-image: -ms-linear-gradient(0deg, $leftColor 0%, $rightColor 100%);
 }
 
 @mixin gradient-top-bottom($from, $to) {
@@ -32,11 +38,13 @@
     background-image: -webkit-linear-gradient($from, $to);
     background-image: -o-linear-gradient($from, $to);
 }
-@mixin hostgr ($left,$right) {
-    background-image: -moz-linear-gradient( 90deg, $left 0%, $right 92%);
-    background-image: -webkit-linear-gradient( 90deg, $left 0%, $right 92%);
-    background-image: -ms-linear-gradient( 90deg, $left 0%, $right 92%);
+
+@mixin hostgr ($left, $right) {
+    background-image: -moz-linear-gradient(90deg, $left 0%, $right 92%);
+    background-image: -webkit-linear-gradient(90deg, $left 0%, $right 92%);
+    background-image: -ms-linear-gradient(90deg, $left 0%, $right 92%);
 }
+
 // Single side border-radius
 @mixin border-top-radius($radius) {
     border-top-right-radius: $radius;
@@ -85,12 +93,15 @@
     ::-webkit-input-placeholder {
         @content
     }
+
     :-moz-placeholder {
         @content
     }
+
     ::-moz-placeholder {
         @content
     }
+
     :-ms-input-placeholder {
         @content
     }
@@ -101,14 +112,17 @@
         /* WebKit browsers */
         color: $color;
     }
+
     &:-moz-placeholder {
         /* Mozilla Firefox 4 to 18 */
         color: $color;
     }
+
     &::-moz-placeholder {
         /* Mozilla Firefox 19+ */
         color: $color;
     }
+
     &:-ms-input-placeholder {
         /* Internet Explorer 10+ */
         color: $color;
@@ -120,25 +134,28 @@
         /* WebKit browsers */
         font-style: $style;
     }
+
     &:-moz-placeholder {
         /* Mozilla Firefox 4 to 18 */
         font-style: $style;
     }
+
     &::-moz-placeholder {
         /* Mozilla Firefox 19+ */
         font-style: $style;
     }
+
     &:-ms-input-placeholder {
         /* Internet Explorer 10+ */
         font-style: $style;
     }
 }
- 
+
 // transition
-@mixin transition($option, $time, $style: ease-in-out){
+@mixin transition($option, $time, $style: ease-in-out) {
     -webkit-transition: $option $time $style;
     -moz-transition: $option $time $style;
-    transition: $option $time $style; 
+    transition: $option $time $style;
 }
 
 
@@ -186,6 +203,7 @@
 
 @mixin rotate3d($vector-x: $default-vector-x, $vector-y: $default-vector-y, $vector-z: $default-vector-z, $rotate: $default-rotate, $perspective: false) {
     $trans: rotate3d($vector-x, $vector-y, $vector-z, $rotate);
+
     @if $perspective {
         $trans: perspective($perspective) $trans;
     }
@@ -215,6 +233,7 @@
         -moz-box-shadow: inset $top $left $blur $color;
         box-shadow: inset $top $left $blur $color;
     }
+
     @else {
         -webkit-box-shadow: $top $left $blur $color;
         -moz-box-shadow: $top $left $blur $color;
@@ -232,12 +251,15 @@
     @-webkit-keyframes #{$animationName} {
         @content;
     }
+
     @-moz-keyframes #{$animationName} {
         @content;
     }
+
     @-o-keyframes #{$animationName} {
         @content;
     }
+
     @keyframes #{$animationName} {
         @content;
     }

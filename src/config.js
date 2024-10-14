@@ -1,6 +1,6 @@
 const config = {
     defaultPath: '/',
-    fontFamily: `Product Sans', sans-serif`,
+    fontFamily: `'Roboto', sans-serif`, // Changed to Roboto
     i18n: 'en',
     miniDrawer: false,
     container: true,

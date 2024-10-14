@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import Slider from "react-slick";
-import KoiFish1 from 'assets/img/slide-v3/KoiFish1.webp';
-import KoiFish2 from 'assets/img/slide-v3/KoiFish2.webp';
-import KoiFish3 from 'assets/img/slide-v3/KoiFish3.jpg';
+import KoiFish1 from "assets/img/slide-v3/KoiFish1.webp";
+import KoiFish2 from "assets/img/slide-v3/KoiFish2.webp";
+import KoiFish3 from "assets/img/slide-v3/KoiFish3.jpg";
+import KoiFish4 from "assets/img/slide-v3/KoiFish4.jpg";
 
 const Banner = () => {
   const slider1 = useRef(null);
@@ -219,7 +220,7 @@ const Banner = () => {
               <div
                 className="header-bg"
                 style={{
-                  backgroundImage: "assets/img/slide-v3/KoiFish2.webp",
+                  backgroundImage: `url(${KoiFish4})`,
                 }}
               >
                 <div className="container">
@@ -248,7 +249,9 @@ const Banner = () => {
                     <div className="col-lg-6">
                       <div className="right-wrapper">
                         <div className="inner">
-                          <h2>Giao Cá Koi đúng thời gian và địa điểm yêu cầu</h2>
+                          <h2>
+                            Giao Cá Koi đúng thời gian và địa điểm yêu cầu
+                          </h2>
                           <div className="list">
                             <ul>
                               <li>Đặt hàng và theo dõi đơn hàng trực tuyến</li>

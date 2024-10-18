@@ -2,7 +2,7 @@ import axios from "api/axios";
 import authHeader from "./authHeaderServices";
 
 const getVehicle = async () => {
-    return await axios.get('/api/v1/Order', { headers: authHeader() });
+    return await axios.get('/api/v1/Vehicle', { headers: authHeader() });
 }
 
 const getVehicleByName = async (name) => {

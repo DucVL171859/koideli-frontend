@@ -3,13 +3,12 @@ import { lazy } from "react";
 import SaleSection from "layout/Sale";
 
 const SalePage = Loadable(lazy(() => import('pages/sale/SalePage')));
-const NewOrders = Loadable(lazy(() => import('pages/sale/NewOrders')));
+const Order = Loadable(lazy(() => import('pages/sale/Order')));
 const OrderChecking = Loadable(lazy(() => import('pages/sale/OrderChecking')));
-const OrderUpdate = Loadable(lazy(() => import('pages/sale/OrderUpdate')));
-const CompleteOrders = Loadable(lazy(() => import('pages/sale/CompleteOrders')));
+const Timeline = Loadable(lazy(() => import('pages/sale/OrderChecking')));
+const Branch = Loadable(lazy(() => import('pages/sale/Branch')));
 const Blogs = Loadable(lazy(() => import('pages/sale/Blogs')));
 const Tasks = Loadable(lazy(() => import('pages/sale/Tasks')));
-const Information = Loadable(lazy(() => import('pages/sale/Information')));
 
 const SaleRoutes = {
     path: '/sale',
@@ -20,20 +19,20 @@ const SaleRoutes = {
             element: <SalePage />
         },
         {
-            path: 'new-orders',
-            element: <NewOrders />
+            path: 'order',
+            element: <Order />
         },
         {
-            path: 'order-checking',
+            path: 'order-checking/:slug',
             element: <OrderChecking />
         },
         {
-            path: 'order-update',
-            element: <OrderUpdate />
+            path: 'timeline',
+            element: <Timeline />
         },
         {
-            path: 'complete-orders',
-            element: <CompleteOrders />
+            path: 'branch',
+            element: <Branch />
         },
         {
             path: 'blogs',
@@ -42,10 +41,6 @@ const SaleRoutes = {
         {
             path: 'tasks',
             element: <Tasks />
-        },
-        {
-            path: 'information',
-            element: <Information />
         }
     ]
 }

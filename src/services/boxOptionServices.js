@@ -5,8 +5,8 @@ const getBoxOption = async () => {
     return await axios.get('/api/v1/BoxOption', { headers: authHeader() });
 }
 
-const getBoxOptionByName = async (name) => {
-    return await axios.get(`/api/v1/BoxOption/${name}`, { headers: authHeader() });
+const getBoxOptionById = async (id) => {
+    return await axios.get(`/api/v1/BoxOption/id?id=${id}`, { headers: authHeader() });
 }
 
 const createBoxOption = async () => {
@@ -23,7 +23,7 @@ const deleteBoxOption = async (id) => {
 
 export default {
     getBoxOption,
-    getBoxOptionByName,
+    getBoxOptionById,
     createBoxOption,
     updateBoxOption,
     deleteBoxOption

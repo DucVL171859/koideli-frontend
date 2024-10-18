@@ -22,6 +22,8 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import koiFishServices from "services/koiFishServices";
 import boxServices from "services/boxServices";
 import estimatePacking from "services/packingServices";
+import { PriceChange } from "@mui/icons-material";
+import { PriceFormat } from "utils/tools";
 
 const ShipmentThree = () => {
   const [fishList, setFishList] = useState([]);
@@ -114,9 +116,9 @@ const ShipmentThree = () => {
       .map((fish) => {
         // Calculate how many fish of this type can fit in the remaining volume
         const maxFit = Math.floor(remainingVolume / fish.volume);
-        return `${Math.min(maxFit)}x ${fish.size} cm (${fish.description})`;
+        return `${Math.min(maxFit)} Cá Koi ${fish.size} cm`;
       })
-      .filter((fishInfo) => fishInfo.includes("1x") || fishInfo.includes("x ")); // Ensure we don't show "0x fish"
+      .filter((fishInfo) => fishInfo.includes("1") || fishInfo.includes(" ")); // Ensure we don't show "0x fish"
   };
 
   return (
@@ -206,27 +208,27 @@ const ShipmentThree = () => {
             <Card sx={{ textAlign: "center", padding: "20px" }}>
               <LocalShippingIcon style={{ fontSize: 60, color: "#ff5722" }} />
               <Typography variant="h5" fontWeight="bold" mt={2} gutterBottom>
-                Tổng số hộp: {packingResult.length}
-              </Typography>
-              <Typography
-                variant="h5"
-                fontWeight="bold"
-                color="#fa4318"
-                gutterBottom
-              >
-                Tổng tiền (Dự kiến): {totalCost.toLocaleString()} VND
+                Tổng tiền (Dự kiến): <PriceFormat price={totalCost} />
               </Typography>
             </Card>
 
             <Box mt={4}>
               <Card sx={{ textAlign: "center", padding: "20px" }}>
                 <ShoppingCartIcon style={{ fontSize: 60, color: "#fa4318" }} />
-                <Typography variant="h6" fontWeight="bold" mt={2}>
-                  Số lượng Hộp
+                <Typography variant="h5" fontWeight="bold" mt={2}>
+                  Loại Hộp:{" "}
+                  {packingResult.length > 0
+                    ? packingResult.map((box, index) => (
+                        <span key={box.boxId}>
+                          {box.boxName}
+                          {index < packingResult.length - 1 ? ", " : ""}
+                        </span>
+                      ))
+                    : "Không có hộp"}
                 </Typography>
                 <Divider sx={{ marginY: 2 }} />
-                <Typography variant="h5" color="textSecondary">
-                  {packingResult.length}
+                <Typography variant="h6" color="textSecondary">
+                  Số Lượng: {packingResult.length}
                 </Typography>
               </Card>
             </Box>
@@ -235,11 +237,15 @@ const ShipmentThree = () => {
               <Card sx={{ textAlign: "center", padding: "20px" }}>
                 <AttachMoneyIcon style={{ fontSize: 60, color: "#fa4318" }} />
                 <Typography variant="h6" fontWeight="bold" mt={2}>
-                  Tổng tiền vận chuyển (Dự kiến)
+                  Số Cá có thể thêm vào
                 </Typography>
                 <Divider sx={{ marginY: 2 }} />
                 <Typography variant="h5" color="textSecondary">
-                  {totalCost.toLocaleString()} VND
+                  {packingResult.map((box) =>
+                    getFishThatFitInBox(box.remainingVolume).map(
+                      (fish, index) => <div key={index}>{fish}</div>
+                    )
+                  )}
                 </Typography>
               </Card>
             </Box>
@@ -272,8 +278,7 @@ const ShipmentThree = () => {
                       <TableCell align="right">
                         {box.fishes.map((fish) => (
                           <Box key={fish.fishId}>
-                            {fish.quantity}x {fish.fishDescription} (
-                            {fish.fishSize} cm)
+                            {fish.quantity} Con Cá size {fish.fishSize} cm
                           </Box>
                         ))}
                       </TableCell>

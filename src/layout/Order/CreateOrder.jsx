@@ -73,6 +73,25 @@ const CreateOrderPage = () => {
   const [boxOptions, setBoxOptions] = useState([]);
   const [selectedBoxOption, setSelectedBoxOption] = useState(null);
 
+  const [distanceData, setDistanceData] = useState([]);
+
+  useEffect(() => {
+    const fetchDistanceData = async () => {
+      try {
+        const response = await distanceServices.getDistance();
+        if (response.success) {
+          setDistanceData(response.data); // Set the distance data from API response
+        } else {
+          console.error("Error fetching distance data:", response.message);
+        }
+      } catch (error) {
+        console.error("Error fetching distance data:", error.message);
+      }
+    };
+
+    fetchDistanceData();
+  }, []);
+
   // Phase 3: Certificate URLs (User can upload images to Firebase)
   const [certificates, setCertificates] = useState({
     urlCer1: "",
@@ -211,8 +230,10 @@ const CreateOrderPage = () => {
               );
 
               if (matchingDistance) {
+                setDistanceShippingCost(matchingDistance.price);
                 setDistanceId(matchingDistance.id); // Save the matched distance ID
-                return matchingDistance.price; // Return the distance shipping cost
+                return matchingDistance.price;
+                // Return the distance shipping cost
               } else {
                 console.error(
                   "No matching distance found for the calculated range."
@@ -285,7 +306,7 @@ const CreateOrderPage = () => {
         setSelectedBoxOption(boxOptionsData[0]); // Optionally select the first box option by default
 
         console.log("Box options stored:", boxOptionsData);
-
+        setPackingShippingCost(boxResponse.totalPrice);
         return boxResponse.totalPrice; // Return packing shipping cost
       } else {
         console.error("Error in response structure:", boxResponse);
@@ -415,9 +436,14 @@ const CreateOrderPage = () => {
 
         console.log("BoxOption Response:", boxOptionResponse);
 
-        if (boxOptionResponse && boxOptionResponse.success && Array.isArray(boxOptionResponse.data) && boxOptionResponse.data.length > 0) {
+        if (
+          boxOptionResponse &&
+          boxOptionResponse.success &&
+          Array.isArray(boxOptionResponse.data) &&
+          boxOptionResponse.data.length > 0
+        ) {
           const createdBoxOptionId = boxOptionResponse.data[0].id;
-        
+
           if (!createdBoxOptionId) {
             console.error("No valid boxOptionId returned from the response.");
           } else {
@@ -428,15 +454,20 @@ const CreateOrderPage = () => {
               distanceId,
               isComplete: "0",
             };
-        
-            console.log("Sending Order Detail Payload:", JSON.stringify(orderDetailPayload));
+
+            console.log(
+              "Sending Order Detail Payload:",
+              JSON.stringify(orderDetailPayload)
+            );
             await orderDetailServices.createOrderDetail(orderDetailPayload);
             console.log("Order detail created successfully.");
           }
         } else {
-          console.error("Failed to create box option. Full response:", boxOptionResponse);
+          console.error(
+            "Failed to create box option. Full response:",
+            boxOptionResponse
+          );
         }
-        
       }
 
       // If any box option creation failed, alert the user and stop
@@ -469,7 +500,7 @@ const CreateOrderPage = () => {
 
       <Grid container spacing={4}>
         {/* Receiver Info */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} mt={5}>
           <Card>
             <CardContent>
               <Typography variant="h5" fontWeight="bold" gutterBottom>
@@ -499,12 +530,9 @@ const CreateOrderPage = () => {
               />
             </CardContent>
           </Card>
-        </Grid>
 
-        {/* Branch Selection */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
+          <Card >
+            <CardContent >
               <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Chọn Kho Nhận
               </Typography>
@@ -530,6 +558,56 @@ const CreateOrderPage = () => {
               </FormControl>
             </CardContent>
           </Card>
+        </Grid>
+
+        {/* Branch Selection */}
+        <Grid item xs={12} md={6}>
+          <Box py={6} className="container">
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              gutterBottom
+              textAlign="center"
+              color="primary"
+            >
+              Bảng Giá Vận Chuyển Theo Khoảng Cách
+            </Typography>
+            <Grid container spacing={4}>
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      Bảng Giá Vận Chuyển
+                    </Typography>
+                    <Divider />
+
+                    <TableContainer component={Paper} sx={{ mt: 2 }}>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Khoảng Cách (km)</TableCell>
+                            <TableCell align="right">Đơn Giá</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {distanceData.map((distance) => (
+                            <TableRow key={distance.id}>
+                              <TableCell>
+                                Từ dưới {distance.rangeDistance} km
+                              </TableCell>
+                              <TableCell align="right">
+                                <PriceFormat price={distance.price} />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </Box>
         </Grid>
 
         {/* Fish Selection */}
@@ -601,7 +679,6 @@ const CreateOrderPage = () => {
           </Card>
         </Grid>
 
-        {/* Packing Result */}
         {packingResult.length > 0 && (
           <Grid item xs={12}>
             <Card>
@@ -640,21 +717,33 @@ const CreateOrderPage = () => {
                       ))}
                     </TableBody>
                   </Table>
-                  <Typography
-                    variant="h5"
-                    fontWeight="bold"
-                    mt={4}
-                    ml={2}
-                    mb={2}
-                  >
-                    Tổng Chi Phí Vận Chuyển:{" "}
-                    {totalShippingCost > 0 ? (
-                      <PriceFormat price={totalShippingCost} />
-                    ) : (
-                      "Chưa tính toán"
-                    )}
-                  </Typography>
                 </TableContainer>
+
+                {/* Add Distance and Packing Cost Information */}
+                <Typography variant="h6" fontWeight="bold" mt={4} mb={2}>
+                  Chi Phí Di chuyển trong nước:{" "}
+                  {distanceShippingCost > 0 ? (
+                    <PriceFormat price={distanceShippingCost} />
+                  ) : (
+                    "Chưa tính toán"
+                  )}
+                </Typography>
+                <Typography variant="h6" fontWeight="bold" mt={4} mb={2}>
+                  Chi Phí Hộp - Đóng gói:{" "}
+                  {packingShippingCost > 0 ? (
+                    <PriceFormat price={packingShippingCost} />
+                  ) : (
+                    "Chưa tính toán"
+                  )}
+                </Typography>
+                <Typography variant="h5" fontWeight="bold" mt={4} ml={2} mb={2}>
+                  Tổng Chi Phí Vận Chuyển:{" "}
+                  {totalShippingCost > 0 ? (
+                    <PriceFormat price={totalShippingCost} />
+                  ) : (
+                    "Chưa tính toán"
+                  )}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>

@@ -59,8 +59,7 @@ const Testimonial = () => {
           <div className="row">
             <div className="col-lg-4 d-flex">
               <div className="section-title text-left m-auto">
-                <span className="subtitles">Kinh Nghiệm</span>
-                <h2 className="title">Đánh Giá Của Khách Hàng</h2>
+                <h2 className="title">Đánh Giá Khách Hàng</h2>
                 <p>
                   Chúng tôi rất vui mừng được phục vụ các khách hàng trên toàn
                   cầu và nhận được những phản hồi tích cực. Mỗi đánh giá giúp
@@ -77,9 +76,12 @@ const Testimonial = () => {
                         <div className="single-review">
                           <div className="single-review-item">
                             <div className="review-head">
-                              <div className="thumb">
+                              <div
+                                className="thumb"
+
+                              >
                                 <img
-                                  src="assets/img/reviewer/01.png"
+                                  src="https://firebasestorage.googleapis.com/v0/b/koideli.appspot.com/o/comp%2Fkoideli-logo.png?alt=media&token=a6cded0e-67fb-4121-a71b-8ce741f4d411"
                                   alt="Hình ảnh khách hàng"
                                 />
                               </div>
@@ -122,7 +124,7 @@ const Testimonial = () => {
                             <div className="review-head">
                               <div className="thumb">
                                 <img
-                                  src="assets/img/reviewer/02.png"
+                                  src="https://firebasestorage.googleapis.com/v0/b/koideli.appspot.com/o/comp%2Fkoideli-logo.png?alt=media&token=a6cded0e-67fb-4121-a71b-8ce741f4d411"
                                   alt="Hình ảnh khách hàng"
                                 />
                               </div>

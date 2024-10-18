@@ -10,8 +10,7 @@ const FeatureThree = () => {
           <div className='row justify-content-start'>
             <div className='col-lg-4 offset-lg-1 d-flex'>
               <div className='section-title white text-left m-auto'>
-                <span className='subtitles'>Đặc Điểm Nổi Bật</span>
-                <h2 className='title active'>Tại Sao Chọn Chúng Tôi!</h2>
+                <h2 className='title active'>DỊCH VỤ NỔI BẬT</h2>
                 <p className='des'>
                   Chúng tôi cam kết mang lại dịch vụ vận chuyển chuyên nghiệp
                   và minh bạch. Với đội ngũ giàu kinh nghiệm và quy trình hiện
@@ -33,13 +32,13 @@ const FeatureThree = () => {
                       <div className='icon'>
                         <FaMoneyBillAlt />
                       </div>
-                      <h4>Giá Cả Minh Bạch</h4>
+                      <h4>Giá Cả</h4>
                     </div>
                     <div className='single-features-item'>
                       <div className='icon'>
                         <FaTruck />
                       </div>
-                      <h4>Kho Bãi Lưu Trữ</h4>
+                      <h4>Kho Bãi</h4>
                     </div>
                   </div>
                   <div className='col-lg-6 mg-top-60'>
@@ -47,13 +46,13 @@ const FeatureThree = () => {
                       <div className='icon'>
                         <FaBox />
                       </div>
-                      <h4>Theo Dõi Thời Gian Thực</h4>
+                      <h4>Theo Dõi Đơn hàng</h4>
                     </div>
                     <div className='single-features-item'>
                       <div className='icon'>
                         <FaShieldAlt />
                       </div>
-                      <h4>Bảo Mật Hàng Hóa</h4>
+                      <h4>Bảo Mật Thông tin</h4>
                     </div>
                   </div>
                 </div>

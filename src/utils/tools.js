@@ -33,8 +33,9 @@ export const PriceFormat = ({ price }) => {
     currency: "VND",
   });
 
-  return { formattedPrice };
+  return formattedPrice; // Return the string directly
 };
+
 
 // Function to format time from a date string
 export const formatTime = (date) => {

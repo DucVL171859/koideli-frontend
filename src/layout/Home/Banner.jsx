@@ -67,7 +67,7 @@ const Banner = () => {
                           </p>
                           <div className="btn-wrapper">
                             <a href="/create-order" className="boxed-btn">
-                              <span>Tạo Đơn Hàng</span>
+                              <span><strong>Tạo Đơn Hàng</strong></span>
                             </a>
                           </div>
                         </div>
@@ -125,7 +125,7 @@ const Banner = () => {
                           </p>
                           <div className="btn-wrapper">
                             <a href="/create-order" className="boxed-btn">
-                              <span>Liên hệ giao hàng</span>
+                              <span><strong>Tạo Đơn Hàng</strong></span>
                             </a>
                           </div>
                         </div>
@@ -183,7 +183,7 @@ const Banner = () => {
                           </p>
                           <div className="btn-wrapper">
                             <a href="/create-order" className="boxed-btn">
-                              <span>Liên hệ giao hàng</span>
+                              <span><strong>Tạo Đơn Hàng</strong></span>
                             </a>
                           </div>
                         </div>
@@ -239,7 +239,7 @@ const Banner = () => {
                           </p>
                           <div className="btn-wrapper">
                             <a href="/create-order" className="boxed-btn">
-                              <span>Liên hệ giao hàng</span>
+                              <span><strong>Tạo Đơn Hàng</strong></span>
                             </a>
                           </div>
                         </div>

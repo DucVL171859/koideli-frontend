@@ -7,8 +7,7 @@ const SolutionThree = () => {
       <div
         className="solution_area style-03"
         style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1601295923217-245f295bb41d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NjA3MnwwfDF8c2VhcmNofDF8fGtvZXxlbnwwfHx8fDE2ODgwMTY5MTd8MA&ixlib=rb-4.0.3&q=80&w=1080')",
+          color: "#fa4318",
         }}
       >
         <div className="container">
@@ -17,8 +16,7 @@ const SolutionThree = () => {
               <div className="solution-bg">
                 <div className="img-file">
                   <img
-                    src="https://images.unsplash.com/photo-1601295923217-245f295bb41d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NjA3MnwwfDF8c2VhcmNofDF8fGtvZXxlbnwwfHx8fDE2ODgwMTY5MTd8MA&ixlib=rb-4.0.3&q=80&w=1080"
-                    alt="Koi Fish Background"
+                    src="https://images.pexels.com/photos/979729/pexels-photo-979729.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
                   />
                 </div>
               </div>
@@ -38,7 +36,7 @@ const SolutionThree = () => {
                   <div className="solution-item">
                     <div className="solution-image">
                       <img
-                        src="https://images.unsplash.com/photo-1600334129128-92eb4a1e9b6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NjA3MnwwfDF8c2VhcmNofDJ8fHNlYXxlbnwwfHx8fDE2ODgwMTY5MTd8MA&ixlib=rb-4.0.3&q=80&w=1080"
+                        src="https://images.pexels.com/photos/8931718/pexels-photo-8931718.jpeg?auto=compress&cs=tinysrgb&w=600"
                         className="img-fluid"
                         alt="Vận Chuyển Quốc Tế"
                       />
@@ -50,7 +48,7 @@ const SolutionThree = () => {
                   <div className="solution-item">
                     <div className="solution-image">
                       <img
-                        src="https://images.unsplash.com/photo-1518806118471-f28b20a1d79d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NjA3MnwwfDF8c2VhcmNofDl8fGNhcnxlbnwwfHx8fDE2ODgwMTY5MTd8MA&ixlib=rb-4.0.3&q=80&w=1080"
+                        src="https://media.istockphoto.com/id/484259624/photo/car-carrier-on-the-highway.jpg?b=1&s=612x612&w=0&k=20&c=zwVaMeLawu7iGx83Jg6F8IwuYnyY52bnpMR3rCgC5zs="
                         className="img-fluid"
                         alt="Giao Hàng Nội Địa"
                       />
@@ -62,7 +60,7 @@ const SolutionThree = () => {
                   <div className="solution-item">
                     <div className="solution-image">
                       <img
-                        src="https://images.unsplash.com/photo-1526045612212-70caf35c14df?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NjA3MnwwfDF8c2VhcmNofDJ8fGRyb25lfGVufDB8fHx8MTY4ODAxNjkxN3ww&ixlib=rb-4.0.3&q=80&w=1080"
+                        src="https://images.pexels.com/photos/12725410/pexels-photo-12725410.jpeg?auto=compress&cs=tinysrgb&w=600"
                         className="img-fluid"
                         alt="Dịch Vụ Giao Cá Nhanh"
                       />
@@ -74,7 +72,7 @@ const SolutionThree = () => {
                   <div className="solution-item">
                     <div className="solution-image">
                       <img
-                        src="https://images.unsplash.com/photo-1532989029401-439615e19225?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NjA3MnwwfDF8c2VhcmNofDJ8fGNvbXB1dGVyfGVufDB8fHx8MTY4ODAxNjkxN3ww&ixlib=rb-4.0.3&q=80&w=1080"
+                        src="https://images.pexels.com/photos/4440891/pexels-photo-4440891.jpeg?auto=compress&cs=tinysrgb&w=600"
                         className="img-fluid"
                         alt="Theo Dõi Đơn Hàng"
                       />
@@ -86,24 +84,12 @@ const SolutionThree = () => {
                   <div className="solution-item">
                     <div className="solution-image">
                       <img
-                        src="https://images.unsplash.com/photo-1507206130118-b59086d464d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NjA3MnwwfDF8c2VhcmNofDJ8fHdvb2R8ZW58MHx8fHwxNjg4MDE2OTE3fDA&ixlib=rb-4.0.3&q=80&w=1080"
+                        src="https://images.pexels.com/photos/7019307/pexels-photo-7019307.jpeg?auto=compress&cs=tinysrgb&w=600"
                         className="img-fluid"
                         alt="Kho Bãi và Phân Phối"
                       />
                     </div>
                     <h4 className="title">Kho Bãi và Phân Phối</h4>
-                  </div>
-                </div>
-                <div className="col-lg-4 col-md-4 col-sm-4">
-                  <div className="solution-item">
-                    <div className="solution-image">
-                      <img
-                        src="https://images.unsplash.com/photo-1507914372769-2c1d9b6c24e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NjA3MnwwfDF8c2VhcmNofDJ8fGV4cGVydHN8ZW58MHx8fHwxNjg4MDE2OTE3fDA&ixlib=rb-4.0.3&q=80&w=1080"
-                        className="img-fluid"
-                        alt="Dịch Vụ Tư Vấn Chuyên Gia"
-                      />
-                    </div>
-                    <h4 className="title">Dịch Vụ Tư Vấn Chuyên Gia</h4>
                   </div>
                 </div>
               </div>

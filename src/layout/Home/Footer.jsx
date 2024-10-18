@@ -1,4 +1,5 @@
 import { Box, Grid, Typography, Link, Divider } from '@mui/material';
+import Logo from "components/logo/LogoMain"; 
 
 const FooterSection = ({ title, children }) => (
     <Box>
@@ -26,10 +27,8 @@ const Footer = () => {
                 <Grid item xs={12} sm={6} md={3}>
                     <FooterSection title="Store Info">
                         <Typography component='div' variant="body2" color="text.secondary">
-                            <img
-                                src="https://via.placeholder.com/150x40?text=Logo"
-                                alt="Logo"
-                                style={{ height: 40, marginBottom: 16 }}
+                            <Logo
+                                style={{ height: 60, marginBottom: 20, }}
                             />
                             <Typography>
                                 Welcome to our store! We offer a variety of products to meet your needs.

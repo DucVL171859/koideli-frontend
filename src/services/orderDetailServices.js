@@ -9,8 +9,8 @@ const getOrderDetailByName = async (name) => {
     return await axios.get(`/api/v1/OrderDetail/${name}`, { headers: authHeader() });
 }
 
-const createOrderDetail = async () => {
-    return await axios.post(`/api/v1/OrderDetail/{'orderDetail'}`, { headers: authHeader() });
+const createOrderDetail = async (OrderDetail) => {
+    return await axios.post(`/api/v1/OrderDetail`, OrderDetail, { headers: authHeader() });
 }
 
 const updateOrderDetail = async (id) => {

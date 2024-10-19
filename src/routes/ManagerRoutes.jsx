@@ -3,14 +3,12 @@ import { lazy } from "react";
 import ManagerSection from "layout/Manager";
 
 const ManagerPage = Loadable(lazy(() => import('pages/manager/ManagerPage')));
-const DeliveryManagement = Loadable(lazy(() => import('pages/manager/DeliveryManagement')));
-const NewOrders = Loadable(lazy(() => import('pages/manager/NewOrders')));
+const Timeline = Loadable(lazy(() => import('pages/manager/Timeline')));
+const Branch = Loadable(lazy(() => import('pages/manager/Branch')));
+const Order = Loadable(lazy(() => import('pages/manager/Order')));
 const OrderChecking = Loadable(lazy(() => import('pages/manager/OrderChecking')));
-const OrderUpdate = Loadable(lazy(() => import('pages/manager/OrderUpdate')));
-const CompleteOrders = Loadable(lazy(() => import('pages/manager/CompleteOrders')));
 const Blogs = Loadable(lazy(() => import('pages/manager/Blogs')));
 const Tasks = Loadable(lazy(() => import('pages/manager/Tasks')));
-const Information = Loadable(lazy(() => import('pages/manager/Information')));
 
 const ManagerRoutes = {
     path: '/manager',
@@ -21,24 +19,20 @@ const ManagerRoutes = {
             element: <ManagerPage />
         },
         {
-            path: 'delivery-management',
-            element: <DeliveryManagement />
+            path: 'timeline',
+            element: <Timeline />
         },
         {
-            path: 'new-orders',
-            element: <NewOrders />
+            path: 'branch',
+            element: <Branch />
         },
         {
-            path: 'order-checking',
+            path: 'order',
+            element: <Order />
+        },
+        {
+            path: 'order-checking/:slug',
             element: <OrderChecking />
-        },
-        {
-            path: 'order-update',
-            element: <OrderUpdate />
-        },
-        {
-            path: 'complete-orders',
-            element: <CompleteOrders />
         },
         {
             path: 'blogs',
@@ -47,10 +41,6 @@ const ManagerRoutes = {
         {
             path: 'tasks',
             element: <Tasks />
-        },
-        {
-            path: 'information',
-            element: <Information />
         }
     ]
 }

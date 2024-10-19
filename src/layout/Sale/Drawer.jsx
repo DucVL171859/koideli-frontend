@@ -5,16 +5,16 @@ import { styled } from '@mui/material/styles';
 const DrawerStyled = styled(Drawer)(() => ({
     '& .MuiDrawer-paper': {
         width: 200,
-        top: '69px',
+        marginTop: '60px'
     },
 }));
 
 const DrawerNav = [
-    { title: 'New Orders', route: '/sale/new-orders' },
-    { title: 'Complete Orders', route: '/sale/complete-orders' },
+    { title: 'Đơn hàng', route: '/sale/order' },
+    { title: 'Lịch trình', route: '/sale/timeline-delivery' },
+    { title: 'Kho', route: '/sale/branch' },
     { title: 'Blogs', route: '/sale/blogs' },
     { title: 'Tasks', route: '/sale/tasks' },
-    { title: 'Information', route: '/sale/information' },
 ];
 
 const DrawerComponent = ({ open, onClose }) => {

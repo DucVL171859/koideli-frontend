@@ -5,8 +5,8 @@ const getOrderDetail = async () => {
     return await axios.get('/api/v1/OrderDetail', { headers: authHeader() });
 }
 
-const getOrderDetailByName = async (name) => {
-    return await axios.get(`/api/v1/OrderDetail/${name}`, { headers: authHeader() });
+const getOrderDetailById = async (id) => {
+    return await axios.get(`/api/v1/OrderDetail/id?id=${id}`, { headers: authHeader() });
 }
 
 const createOrderDetail = async (OrderDetail) => {
@@ -23,7 +23,7 @@ const deleteOrderDetail = async (id) => {
 
 export default {
     getOrderDetail,
-    getOrderDetailByName,
+    getOrderDetailById,
     createOrderDetail,
     updateOrderDetail,
     deleteOrderDetail

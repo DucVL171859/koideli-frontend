@@ -12,12 +12,15 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { styled } from "@mui/material/styles";
 import logo from "assets/images/koideli-logo.png";
 import { ArrowDropDownOutlined } from "@mui/icons-material";
+import authServices from "services/authServices";
+import { useNavigate } from "react-router-dom";
 
 const AppBarStyled = styled(AppBar)(({ theme }) => ({
   zIndex: theme.zIndex.drawer + 1,
 }));
 
 const Header = ({ onToggleDrawer }) => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleMenuClick = (event) => {
@@ -26,6 +29,8 @@ const Header = ({ onToggleDrawer }) => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+    authServices.logout();
+    navigate('/');
   };
 
   return (
@@ -54,7 +59,7 @@ const Header = ({ onToggleDrawer }) => {
           onClick={handleMenuClick}
           sx={{ color: "#000" }}
         >
-          Account <ArrowDropDownOutlined />
+          Người dùng <ArrowDropDownOutlined />
         </Button>
         <Menu
           id="account-menu"
@@ -62,9 +67,7 @@ const Header = ({ onToggleDrawer }) => {
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
         >
-          <MenuItem onClick={handleMenuClose}>Information</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Notification</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Đăng xuất</MenuItem>
         </Menu>
       </Toolbar>
     </AppBarStyled>

@@ -1,5 +1,5 @@
 const authHeader = () => {
-  let token = sessionStorage.getItem("token"); // Token should already be a string
+  let token = sessionStorage.getItem("token");
 
   if (token) {
     return { Authorization: `Bearer ${token}` };

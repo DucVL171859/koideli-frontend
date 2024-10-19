@@ -9,8 +9,8 @@ const getBoxOptionById = async (id) => {
     return await axios.get(`/api/v1/BoxOption/id?id=${id}`, { headers: authHeader() });
 }
 
-const createBoxOption = async () => {
-    return await axios.post(`/api/v1/BoxOption/{'boxOption'}`, { headers: authHeader() });
+const createBoxOption = async (boxOption) => {
+    return await axios.post(`/api/v1/BoxOption`, boxOption, { headers: authHeader() });
 }
 
 const updateBoxOption = async (id) => {

@@ -22,7 +22,6 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import koiFishServices from "services/koiFishServices";
 import boxServices from "services/boxServices";
 import estimatePacking from "services/packingServices";
-import { PriceChange } from "@mui/icons-material";
 import { PriceFormat } from "utils/tools";
 
 const ShipmentThree = () => {
@@ -30,6 +29,7 @@ const ShipmentThree = () => {
   const [packingResult, setPackingResult] = useState([]);
   const [totalCost, setTotalCost] = useState(0);
   const [boxList, setBoxList] = useState([]);
+  const [shippingPoint, setShippingPoint] = useState("VN"); // Default to Vietnam
 
   // Fetch fish data on component mount
   useEffect(() => {
@@ -52,6 +52,28 @@ const ShipmentThree = () => {
     fetchFishData();
   }, []);
 
+  // Fetch box data when the shipping point changes
+  useEffect(() => {
+    const fetchBoxData = async () => {
+      try {
+        const boxResponse = await boxServices.getBox();
+        if (boxResponse.success) {
+          // Filter boxes based on the selected shipping point
+          const filteredBoxes = boxResponse.data.filter((box) =>
+            box.name.includes(shippingPoint)
+          );
+          setBoxList(filteredBoxes);
+        } else {
+          console.error("Error fetching box data:", boxResponse.message);
+        }
+      } catch (error) {
+        console.error("Error fetching box data:", error);
+      }
+    };
+
+    fetchBoxData();
+  }, [shippingPoint]);
+
   // Handle quantity change for fish
   const handleQuantityChange = (id, quantity) => {
     setFishList((prevFishList) =>
@@ -61,45 +83,38 @@ const ShipmentThree = () => {
     );
   };
 
+  // Handle packing estimation
   const handleEstimatePacking = async () => {
     try {
-      // Fetch box data
-      const boxResponse = await boxServices.getBox();
-      if (boxResponse.success) {
-        setBoxList(boxResponse.data);
-
-        // Prepare request body for packing API
-        const requestBody = {
-          fishList: fishList
-            .filter((fish) => fish.quantity > 0)
-            .map((fish) => ({
-              id: fish.id,
-              size: fish.size,
-              volume: fish.volume,
-              description: fish.description,
-              quantity: fish.quantity,
-            })),
-          boxList: boxResponse.data.map((box) => ({
-            id: box.id,
-            name: box.name,
-            maxVolume: box.maxVolume,
-            price: box.price,
-            remainingVolume: box.maxVolume,
+      // Prepare request body for packing API
+      const requestBody = {
+        fishList: fishList
+          .filter((fish) => fish.quantity > 0)
+          .map((fish) => ({
+            id: fish.id,
+            size: fish.size,
+            volume: fish.volume,
+            description: fish.description,
+            quantity: fish.quantity,
           })),
-        };
+        boxList: boxList.map((box) => ({
+          id: box.id,
+          name: box.name,
+          maxVolume: box.maxVolume,
+          price: box.price,
+          remainingVolume: box.maxVolume,
+        })),
+      };
 
-        // Call packing API with the fish and box list
-        const packingResponse = await estimatePacking(requestBody);
+      // Call packing API with the fish and filtered box list
+      const packingResponse = await estimatePacking(requestBody);
 
-        // Check if response contains data and is successful
-        if (packingResponse && packingResponse.boxes) {
-          setPackingResult(packingResponse.boxes);
-          setTotalCost(packingResponse.totalPrice);
-        } else {
-          console.error("Error in response structure:", packingResponse);
-        }
+      // Check if response contains data and is successful
+      if (packingResponse && packingResponse.boxes) {
+        setPackingResult(packingResponse.boxes);
+        setTotalCost(packingResponse.totalPrice);
       } else {
-        console.error("Error fetching box data:", boxResponse.message);
+        console.error("Error in response structure:", packingResponse);
       }
     } catch (error) {
       console.error("Error estimating packing:", error);
@@ -159,8 +174,6 @@ const ShipmentThree = () => {
                       {fishList.map((fish) => (
                         <TableRow key={fish.id}>
                           <TableCell>{fish.size} cm</TableCell>
-                          <TableCell>{fish.volume}</TableCell>
-                          <TableCell>{fish.description}</TableCell>
                           <TableCell align="right">
                             <TextField
                               type="number"
@@ -178,6 +191,26 @@ const ShipmentThree = () => {
                     </TableBody>
                   </Table>
                 </TableContainer>
+
+                {/* Shipping Point Selection */}
+                <Box mt={3} sx={{ textAlign: "center" }}>
+                  <Button
+                    variant={shippingPoint === "VN" ? "contained" : "outlined"}
+                    color="primary"
+                    onClick={() => setShippingPoint("VN")}
+                    sx={{ mx: 1 }}
+                  >
+                    Gửi hàng trong nước
+                  </Button>
+                  <Button
+                    variant={shippingPoint === "JP" ? "contained" : "outlined"}
+                    color="primary"
+                    onClick={() => setShippingPoint("JP")}
+                    sx={{ mx: 1 }}
+                  >
+                    Gửi hàng từ Nhật Bản
+                  </Button>
+                </Box>
 
                 <Button
                   variant="contained"
@@ -285,7 +318,7 @@ const ShipmentThree = () => {
                       <TableCell align="right">
                         {getFishThatFitInBox(box.remainingVolume).map(
                           (fish, index) => (
-                            <div key={index}>{fish}</div> // Display each fish on a new line
+                            <div key={index}>{fish}</div>
                           )
                         )}
                       </TableCell>

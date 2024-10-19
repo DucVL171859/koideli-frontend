@@ -17,9 +17,11 @@ const getOrderById = async (id) => {
     );
 }
 
-const createOrder = async () => {
-    return await axios.post(`/api/v1/Order/{'order'}`, { headers: authHeader() });
-}
+const createOrder = async (Order) => {
+  return await axios.post("/api/v1/Order", Order, {
+    headers: authHeader(),
+  });
+};
 
 const updateOrder = async (id, updatedData) => {
     return await axios.put(`/api/v1/Order?id=${id}`,

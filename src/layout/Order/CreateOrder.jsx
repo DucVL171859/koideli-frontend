@@ -288,33 +288,32 @@ const CreateOrderPage = () => {
 
       const boxResponse = await estimatePacking(requestBody);
 
-      // Check if the response contains the boxes
       if (boxResponse && boxResponse.boxes) {
-        setPackingResult(boxResponse.boxes); // Update the packing result state
-        setPackingShippingCost(boxResponse.boxes.totalPrice); // Set the packing shipping cost
+        const updatedBoxes = boxResponse.boxes.map((box) => {
+          let additionalCost = 0;
+          if (box.boxName.includes("Medium")) {
+            additionalCost = 150000;
+          } else if (box.boxName.includes("Large")) {
+            additionalCost = 350000;
+          }
 
-        // Store the box options and select a default (optional)
-        const boxOptionsData = boxResponse.boxes.map((box) => ({
-          boxId: box.boxId,
-          fishes: box.fishes.map((fish) => ({
-            fishId: fish.fishId,
-            quantity: fish.quantity,
-          })),
-        }));
+          return {
+            ...box,
+            boxShippingCost: box.price + additionalCost,
+          };
+        });
 
-        setBoxOptions(boxOptionsData); // Store the box options in the state
-        setSelectedBoxOption(boxOptionsData[0]); // Optionally select the first box option by default
-
-        console.log("Box options stored:", boxOptionsData);
-        setPackingShippingCost(boxResponse.totalPrice);
-        return boxResponse.totalPrice; // Return packing shipping cost
+        setPackingResult(updatedBoxes);
+        setPackingShippingCost(
+          updatedBoxes.reduce((acc, box) => acc + box.boxShippingCost, 0)
+        );
+        setBoxOptions(updatedBoxes);
+        setSelectedBoxOption(updatedBoxes[0]);
       } else {
         console.error("Error in response structure:", boxResponse);
-        return 0;
       }
     } catch (error) {
       console.error("Error estimating packing:", error.message);
-      return 0;
     }
   };
 
@@ -531,8 +530,8 @@ const CreateOrderPage = () => {
             </CardContent>
           </Card>
 
-          <Card >
-            <CardContent >
+          <Card>
+            <CardContent>
               <Typography variant="h5" fontWeight="bold" gutterBottom>
                 Chọn Kho Nhận
               </Typography>

@@ -78,8 +78,10 @@ const OrderDetail = () => {
 
     const handleAcceptOrder = async (id) => {
         let updatedData = {
+            ...order,
             isShipping: 'Approved'
         };
+
         await orderServices.updateOrder(id, updatedData);
         navigate('/manager/order');
     };

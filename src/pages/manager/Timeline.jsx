@@ -15,14 +15,23 @@ import {
     Paper,
     Box,
     ListItemText,
+    Button, // Import Button
 } from "@mui/material";
 import MainCard from "components/MainCard";
 import orderServices from "services/orderServices";
 import orderDetailServices from "services/orderDetailServices";
-import branchServices from "services/branchServices";
-import timelineDeliveryServices from "services/timelineDeliveryServices";
 import vehicleServices from "services/vehicleServices";
 import boxOptionServices from "services/boxOptionServices";
+import timelineDeliveryServices from "services/timelineDeliveryServices";
+import branchServices from "services/branchServices";
+
+const sampleBranch = [
+    { id: 1, name: 'Kho Cần Thơ', forward: 1, backward: null },
+    { id: 2, name: 'Kho Hồ Chí Minh', forward: 3, backward: 2 },
+    { id: 3, name: 'Kho Đà Nẵng', forward: 5, backward: 4 },
+    { id: 4, name: 'Kho Hải Phòng', forward: 7, backward: 6 },
+    { id: 5, name: 'Kho Hà Nội', forward: null, backward: 8 }
+];
 
 const formatDateTime = (dateString) => {
     const options = {
@@ -40,12 +49,20 @@ const formatDateTime = (dateString) => {
 const Timeline = () => {
     const [orders, setOrders] = useState([]);
     const [orderDetailsMap, setOrderDetailsMap] = useState({});
-    const [branches, setBranches] = useState([]);
-    const [selectedBranch, setSelectedBranch] = useState("");
-    const [vehicles, setVehicles] = useState({});
-    const [timelineDelivery, setTimelineDelivery] = useState([]);
     const [selectedOrders, setSelectedOrders] = useState({});
     const [boxOptions, setBoxOptions] = useState({});
+
+    const [branches, setBranches] = useState([]);
+    const [branchesAPI, setBranchesAPI] = useState([]);
+    const [branchPointAPI, setBranchPointAPI] = useState([]);
+    const [selectedStartPoint, setSelectedStartPoint] = useState(null);
+    const [selectedEndPoint, setSelectedEndPoint] = useState(null);
+
+    const [vehicles, setVehicles] = useState([]);
+    const [timelineDelivery, setTimelineDelivery] = useState([]);
+    const [filteredTimelines, setFilteredTimelines] = useState([]);
+
+    const [error, setError] = useState("");
 
     useEffect(() => {
         const getOrders = async () => {
@@ -53,7 +70,6 @@ const Timeline = () => {
             if (resOfOrder) {
                 let approvedOrders = resOfOrder.data.data.filter((order) => order.isShipping === 'Approved');
                 setOrders(approvedOrders);
-
                 const detailsPromises = approvedOrders.map(order => getOrderDetails(order.id));
                 await Promise.all(detailsPromises);
             }
@@ -71,23 +87,26 @@ const Timeline = () => {
             }
         };
 
-        const getBranch = async () => {
-            let resOfBranch = await branchServices.getBranch();
-            if (resOfBranch) {
-                setBranches(resOfBranch.data.data);
-            }
-        };
-
         const getVehicles = async () => {
             let resOfVehicle = await vehicleServices.getVehicle();
             if (resOfVehicle) {
-                const vehicleMap = {};
-                resOfVehicle.data.data.forEach(vehicle => {
-                    vehicleMap[vehicle.id] = vehicle;
-                });
-                setVehicles(vehicleMap);
+                setVehicles(resOfVehicle.data.data);
             }
         };
+
+        const getBranches = async () => {
+            let resOfBranch = await branchServices.getBranch();
+            if (resOfBranch) {
+                setBranchesAPI(resOfBranch.data.data);
+            }
+        }
+
+        const getTimelineDelivery = async () => {
+            let resOfTimelineDelivery = await timelineDeliveryServices.getTimelineDelivery();
+            if (resOfTimelineDelivery) {
+                setTimelineDelivery(resOfTimelineDelivery.data.data);
+            }
+        }
 
         const getBoxOptions = async () => {
             let resOfBoxOptions = await boxOptionServices.getBoxOption();
@@ -100,24 +119,30 @@ const Timeline = () => {
             }
         };
 
+        setBranches(sampleBranch);
         getOrders();
-        getBranch();
         getVehicles();
+        getBranches();
+        getTimelineDelivery();
         getBoxOptions();
     }, []);
 
-    const handleBranchChange = async (event) => {
-        const branchId = event.target.value;
-        setSelectedBranch(branchId);
-
-        let resOfTimelineDelivery = await timelineDeliveryServices.getTimelineDelivery();
-        if (resOfTimelineDelivery) {
-            let timelineDeliveryData = resOfTimelineDelivery.data.data;
-            let matchedTimeline = timelineDeliveryData.filter(timeline => timeline.branchId === branchId);
-            if (matchedTimeline) {
-                setTimelineDelivery(matchedTimeline);
-            }
+    useEffect(() => {
+        if (selectedStartPoint === selectedEndPoint) {
+            setError("Điểm bắt đầu và điểm kết thúc không thể giống nhau.");
+        } else {
+            setError("");
         }
+    }, [selectedStartPoint, selectedEndPoint]);
+
+    const handleStartPointChange = (event) => {
+        let selStartPoint = sampleBranch.find(branch => branch.name === event.target.value);
+        setSelectedStartPoint(selStartPoint);
+    };
+
+    const handleEndPointChange = (event) => {
+        let selEndPoint = sampleBranch.find(branch => branch.name === event.target.value);
+        setSelectedEndPoint(selEndPoint);
     };
 
     const handleOrderSelectChange = (timelineId, event) => {
@@ -134,10 +159,8 @@ const Timeline = () => {
 
         selectedOrderIds.forEach(orderId => {
             const orderDetails = orderDetailsMap[orderId] || [];
-            console.log(orderDetails)
             orderDetails.forEach(detail => {
-                const boxOption = boxOptions[detail.boxOptionId] || [];
-                console.log(boxOption)
+                const boxOption = boxOptions[detail.boxOptionId] || {};
                 if (boxOption && boxOption.volume) {
                     totalVolume += boxOption.volume;
                 }
@@ -145,6 +168,48 @@ const Timeline = () => {
         });
         return totalVolume;
     };
+
+    const handleCreateTrip = async () => {
+        if (selectedStartPoint && selectedEndPoint && selectedStartPoint !== selectedEndPoint) {
+            let startIndex = sampleBranch.findIndex(branch => branch.id === selectedStartPoint.id);
+            let endIndex = sampleBranch.findIndex(branch => branch.id === selectedEndPoint.id);
+
+            let middleBranches = [];
+            let allBranches = [];
+            let startBranch = {};
+
+            if (startIndex < endIndex) {
+                console.log('forward')
+                startBranch = branchesAPI.find(branch => branch.id === selectedStartPoint.forward);
+                middleBranches = sampleBranch.slice(startIndex + 1, endIndex);
+                let fetchedRestBranches = middleBranches.map(branch => {
+                    return branchesAPI.find(b => b.id === branch.forward)
+                }).filter(Boolean);
+                allBranches = [startBranch, ...fetchedRestBranches].filter(Boolean).sort((a, b) => a.id - b.id);
+                setBranchPointAPI(allBranches);
+                console.log(allBranches)
+            } else {
+                console.log('backward')
+                startBranch = branchesAPI.find(branch => branch.id === selectedStartPoint.backward);
+                middleBranches = sampleBranch.slice(endIndex + 1, startIndex);
+                let fetchedMiddleBranches = middleBranches.map(branch => {
+                    return branchesAPI.find(b => b.id === branch.backward)
+                }).filter(Boolean);
+                allBranches = [startBranch, ...fetchedMiddleBranches].filter(Boolean).sort((a, b) => b.id - a.id);
+                setBranchPointAPI(allBranches);
+                console.log(allBranches)
+            }
+
+            let firstBranchId = allBranches[0]?.id;
+            let filtered = timelineDelivery.filter(timeline =>
+                timeline.branchId === firstBranchId
+            );
+            console.log(firstBranchId)
+            console.log(vehicles)
+            setFilteredTimelines(filtered);
+        }
+    };
+
 
     return (
         <>
@@ -163,6 +228,7 @@ const Timeline = () => {
                                         <Typography>Tổng số cá: {detail.boxOptionId}</Typography>
                                     </Box>
                                 ))}
+
                             </Box>
                         </Box>
                     ))}
@@ -170,22 +236,53 @@ const Timeline = () => {
             </MainCard>
 
             <MainCard title="Lịch trình" sx={{ mt: 2 }}>
-                <FormControl fullWidth margin="normal">
-                    <InputLabel id="branch-select-label">Chọn tuyến</InputLabel>
-                    <Select
-                        labelId="branch-select-label"
-                        value={selectedBranch}
-                        onChange={handleBranchChange}
-                    >
-                        {branches.map((branch) => (
-                            <MenuItem key={branch.id} value={branch.id}>
-                                {branch.startPoint} - {branch.endPoint}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
+                <Box display="flex" flexDirection="column" alignItems="flex-start">
+                    <Box sx={{ display: 'inline-block', width: '48%', marginRight: '4%' }}>
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel id="start-point-select-label">Chọn điểm bắt đầu</InputLabel>
+                            <Select
+                                labelId="start-point-select-label"
+                                value={selectedStartPoint ? selectedStartPoint.name : ""}
+                                onChange={handleStartPointChange}
+                            >
+                                {branches.map((branch) => (
+                                    <MenuItem key={branch.id} value={branch.name}>
+                                        {branch.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
 
-                <TableContainer component={Paper}>
+                    <Box sx={{ display: 'inline-block', width: '48%' }}>
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel id="end-point-select-label">Chọn điểm kết thúc</InputLabel>
+                            <Select
+                                labelId="end-point-select-label"
+                                value={selectedEndPoint ? selectedEndPoint.name : ""}
+                                onChange={handleEndPointChange}
+                            >
+                                {branches.map((branch) => (
+                                    <MenuItem key={branch.id} value={branch.name}>
+                                        {branch.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+                </Box>
+
+                {error && (
+                    <Typography color="error" variant="body2" sx={{ marginTop: 1 }}>
+                        {error}
+                    </Typography>
+                )}
+
+                <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleCreateTrip}>
+                    Tạo chuyến
+                </Button>
+
+                <TableContainer component={Paper} sx={{ mt: 2 }}>
                     <Table>
                         <TableHead>
                             <TableRow>
@@ -197,23 +294,23 @@ const Timeline = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {timelineDelivery.map((timeline) => (
+                            {filteredTimelines && filteredTimelines.map((timeline) => (
                                 <TableRow key={timeline.id}>
-                                    <TableCell>{vehicles[timeline.vehicleId]?.name}</TableCell>
+                                    <TableCell>{vehicles[timeline.vehicleId - 1]?.name}</TableCell>
                                     <TableCell>{formatDateTime(timeline.startDay)} - {formatDateTime(timeline.endDay)}</TableCell>
-                                    <TableCell>{vehicles[timeline.vehicleId]?.vehicleVolume} lít</TableCell>
+                                    <TableCell>{vehicles[timeline.vehicleId - 1]?.vehicleVolume} lít</TableCell>
                                     <TableCell>
                                         <FormControl fullWidth>
                                             <Select
                                                 multiple
-                                                value={selectedOrders[timeline.id] || []}
+                                                value={selectedOrders[timeline.id - 1] || []}
                                                 renderValue={(selected) => selected.join(', ')}
                                                 onChange={(event) => handleOrderSelectChange(timeline.id, event)}
                                             >
                                                 {orders.map((order) => (
                                                     <MenuItem key={order.id} value={order.id}>
                                                         <Checkbox
-                                                            checked={selectedOrders[timeline.id]?.includes(order.id) || false}
+                                                            checked={selectedOrders[timeline.id - 1]?.includes(order.id) || false}
                                                         />
                                                         <ListItemText primary={`ID: ${order.id}`} />
                                                     </MenuItem>

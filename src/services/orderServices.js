@@ -23,11 +23,6 @@ const createOrder = async () => {
 
 const updateOrder = async (id, updatedData) => {
     return await axios.put(`/api/v1/Order?id=${id}`,
-        {
-            params: {
-                id: id
-            }
-        },
         updatedData,
         { headers: authHeader() }
     );

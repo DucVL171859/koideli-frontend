@@ -23,7 +23,7 @@ import koiFishServices from 'services/koiFishServices';
 import orderDetailServices from 'services/orderDetailServices';
 import boxOptionServices from 'services/boxOptionServices';
 
-const OrderChecking = () => {
+const OrderUpdate = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState({});
@@ -117,17 +117,14 @@ const OrderChecking = () => {
     };
 
     const handleConfirmAction = async () => {
-        if (dialogAction === 'accept') {
+        if (dialogAction === 'update') {
             await orderServices.updateOrder(order.id,
-                { ...order, isShipping: 'Approved' }
+                { ...order, isShipping: 'Packed' }
             );
-        } else if (dialogAction === 'reject') {
-            await orderServices.updateOrder(order.id,
-                { ...order, isShipping: 'Cancelled' }
-            );
+        } else if (dialogAction === 'notUpdate') {
         }
         setOpenDialog(false);
-        navigate('/sale/order');
+        navigate('/manager/order');
     };
 
     return (
@@ -260,7 +257,7 @@ const OrderChecking = () => {
                 <Button
                     variant="contained"
                     color="error"
-                    onClick={() => handleOpenDialog('reject')}
+                    onClick={() => handleOpenDialog('notUpdate')}
                     sx={{ marginRight: 4 }}
                 >
                     Từ chối
@@ -268,7 +265,7 @@ const OrderChecking = () => {
                 <Button
                     variant="contained"
                     color="success"
-                    onClick={() => handleOpenDialog('accept')}
+                    onClick={() => handleOpenDialog('update')}
                 >
                     Xác nhận
                 </Button>
@@ -278,7 +275,7 @@ const OrderChecking = () => {
                 <DialogTitle>Xác nhận</DialogTitle>
                 <DialogContent>
                     <Typography>
-                        Bạn có chắc chắn muốn {dialogAction === 'accept' ? 'xác nhận' : 'từ chối'} đơn hàng này?
+                        Bạn có chắc chắn muốn {dialogAction === 'update' ? 'cập nhật' : 'hủy cập nhật'} đơn hàng này?
                     </Typography>
                 </DialogContent>
                 <DialogActions>
@@ -294,4 +291,4 @@ const OrderChecking = () => {
     );
 };
 
-export default OrderChecking;
+export default OrderUpdate;

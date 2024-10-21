@@ -5,7 +5,7 @@ const ManagerPage = () => {
 
     return (
         <>
-            <MainCard title="Welcome Sale">
+            <MainCard title="Welcome Manager">
                 <Typography variant="body2">
                     Welcome Manager come to our Koi Fish Delivery Services.
                     Have a nice day to begin your work.

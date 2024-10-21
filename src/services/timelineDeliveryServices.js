@@ -5,8 +5,12 @@ const getTimelineDelivery = async () => {
     return await axios.get('/api/v1/TimelineDelivery', { headers: authHeader() });
 }
 
-const getTimelineDeliveryByName = async (name) => {
-    return await axios.get(`/api/v1/TimelineDelivery/${name}`, { headers: authHeader() });
+const getTimelineDeliveryEnable = async () => {
+    return await axios.get('/api/v1/TimelineDelivery/enable', { headers: authHeader() });
+}
+
+const getTimelineDeliveryById = async (id) => {
+    return await axios.get(`/api/v1/TimelineDelivery/id?id=${id}`, { headers: authHeader() });
 }
 
 const createTimelineDelivery = async () => {
@@ -23,7 +27,8 @@ const deleteTimelineDelivery = async (id) => {
 
 export default {
     getTimelineDelivery,
-    getTimelineDeliveryByName,
+    getTimelineDeliveryEnable,
+    getTimelineDeliveryById,
     createTimelineDelivery,
     updateTimelineDelivery,
     deleteTimelineDelivery

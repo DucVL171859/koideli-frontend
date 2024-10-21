@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
     Box,
-    Button,
     Paper,
     Typography,
     Divider,
@@ -11,10 +10,6 @@ import {
     TableRow,
     TableCell,
     TableBody,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
 } from '@mui/material';
 import MainCard from 'components/MainCard';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -23,7 +18,7 @@ import koiFishServices from 'services/koiFishServices';
 import orderDetailServices from 'services/orderDetailServices';
 import boxOptionServices from 'services/boxOptionServices';
 
-const OrderChecking = () => {
+const OrderDetail = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState({});
@@ -31,9 +26,6 @@ const OrderChecking = () => {
     const [currentOrderDetail, setCurrentOrderDetail] = useState([]);
     const [boxOption, setBoxOption] = useState([]);
     const [koiFist, setKoiFist] = useState([]);
-
-    const [openDialog, setOpenDialog] = useState(false);
-    const [dialogAction, setDialogAction] = useState('');
 
     const statusMessages = {
         Pending: 'Đơn hàng mới',
@@ -106,29 +98,6 @@ const OrderChecking = () => {
         const fishQuantities = option.fishes.reduce((sum, fish) => sum + fish.quantity, 0);
         return total + fishQuantities;
     }, 0);
-
-    const handleOpenDialog = (action) => {
-        setDialogAction(action);
-        setOpenDialog(true);
-    };
-
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-    };
-
-    const handleConfirmAction = async () => {
-        if (dialogAction === 'accept') {
-            await orderServices.updateOrder(order.id,
-                { ...order, isShipping: 'Approved' }
-            );
-        } else if (dialogAction === 'reject') {
-            await orderServices.updateOrder(order.id,
-                { ...order, isShipping: 'Cancelled' }
-            );
-        }
-        setOpenDialog(false);
-        navigate('/sale/order');
-    };
 
     return (
         <MainCard>
@@ -255,43 +224,8 @@ const OrderChecking = () => {
                     </Table>
                 </TableContainer>
             </Box>
-
-            <Box display="flex" justifyContent="center" marginTop={2}>
-                <Button
-                    variant="contained"
-                    color="error"
-                    onClick={() => handleOpenDialog('reject')}
-                    sx={{ marginRight: 4 }}
-                >
-                    Từ chối
-                </Button>
-                <Button
-                    variant="contained"
-                    color="success"
-                    onClick={() => handleOpenDialog('accept')}
-                >
-                    Xác nhận
-                </Button>
-            </Box>
-
-            <Dialog open={openDialog} onClose={handleCloseDialog}>
-                <DialogTitle>Xác nhận</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Bạn có chắc chắn muốn {dialogAction === 'accept' ? 'xác nhận' : 'từ chối'} đơn hàng này?
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog} color="primary">
-                        Hủy
-                    </Button>
-                    <Button onClick={handleConfirmAction} color="primary">
-                        Xác nhận
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </MainCard>
     );
 };
 
-export default OrderChecking;
+export default OrderDetail;

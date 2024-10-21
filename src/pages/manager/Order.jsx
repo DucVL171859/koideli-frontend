@@ -19,10 +19,10 @@ import { useNavigate } from 'react-router-dom';
 import orderServices from 'services/orderServices';
 import boxOptionServices from 'services/boxOptionServices';
 
-const NewOrders = () => {
+const Order = () => {
     const navigate = useNavigate();
     const [order, setOrder] = useState([]);
-    const [statusFilter, setStatusFilter] = useState('Approved');
+    const [statusFilter, setStatusFilter] = useState('Pending');
 
     useEffect(() => {
         const getOrder = async () => {
@@ -45,20 +45,28 @@ const NewOrders = () => {
         navigate(`/manager/order-checking/${slug}`);
     };
 
+    const handleUpdateOrder = (slug) => {
+        navigate(`/manager/order-update/${slug}`);
+    };
+
+    const handleViewDetails = (slug) => {
+        navigate(`/manager/order-detail/${slug}`);
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'Pending':
                 return '#f0ad4e';
             case 'Approved':
                 return '#5cb85c';
-            case 'Rejected':
+            case 'Packed':
                 return '#d9534f';
-            case 'Cancelled':
-                return '#d9534f';
-            case 'Packing':
-                return '#5bc0de';
+            case 'Delivering':
+                return '#79bdcc';
             case 'Completed':
                 return '#5bc0de';
+            case 'Cancelled':
+                return '#d9534f';
             default:
                 return 'gray';
         }
@@ -84,9 +92,10 @@ const NewOrders = () => {
                     <MenuItem value="All">Tất cả đơn hàng</MenuItem>
                     <MenuItem value="Pending">Đơn hàng mới</MenuItem>
                     <MenuItem value="Approved">Đơn hàng đã xác nhận</MenuItem>
-                    <MenuItem value="Rejected">Đơn hàng đã từ chối</MenuItem>
+                    <MenuItem value="Packed">Đơn hàng chờ sắp xếp vận chuyển</MenuItem>
                     <MenuItem value="Delivering">Đơn hàng đang vận chuyển</MenuItem>
                     <MenuItem value="Completed">Đơn hàng đã vận chuyển</MenuItem>
+                    <MenuItem value="Cancelled">Đơn hàng đã từ chối</MenuItem>
                 </Select>
             </FormControl>
 
@@ -125,10 +134,19 @@ const NewOrders = () => {
                                     <TableCell>
                                         <Button
                                             variant="contained"
-                                            onClick={() => handleExecuteOrder(order.id)}
+                                            onClick={() => {
+                                                if (order.isShipping === 'Pending') {
+                                                    handleExecuteOrder(order.id);
+                                                } else if (order.isShipping === 'Approved') {
+                                                    handleUpdateOrder(order.id);
+                                                } else {
+                                                    handleViewDetails(order.id);
+                                                }
+                                            }}
                                             sx={{ bgcolor: '#272242', color: '#FFF' }}
                                         >
-                                            Xử lý
+                                            {order.isShipping === 'Pending' ? 'Xử lý' :
+                                                order.isShipping === 'Approved' ? 'Cập nhật' : 'Xem chi tiết'}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -141,4 +159,4 @@ const NewOrders = () => {
     );
 };
 
-export default NewOrders;
+export default Order;

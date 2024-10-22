@@ -87,7 +87,7 @@ const CreateOrderPage = () => {
   const [distanceId, setDistanceId] = useState(null);
   const [distanceShippingCost, setDistanceShippingCost] = useState(0); // Shipping cost from distanceAPI
   const [packingShippingCost, setPackingShippingCost] = useState(0);
-  const [boxShippingCost, setBoxShippingCost] = useState(0);
+  const [boxOpShippingCost, setBoxOpShippingCost] = useState(0);
   const [totalShippingCost, setTotalShippingCost] = useState(0); // Sum of both shipping costs
   const [distanceRanges, setDistanceRanges] = useState([]);
 
@@ -410,21 +410,38 @@ const CreateOrderPage = () => {
       const packingCost = await handleEstimatePacking();
       console.log("packing", packingCost);
 
-      let additionalBoxCost = 0;
+      // Resetting the box-specific shipping costs
+      let boxShippingCosts = [];
 
-      // Iterate over packing results to add box-specific costs
+      // Tính toán chi phí bổ sung riêng cho từng hộp
       packingResult.forEach((box) => {
+        let additionalCost = 0;
+
         if (box.boxName.includes("Medium")) {
-          additionalBoxCost += 150000;
+          additionalCost = 150000 * box.usageCount; // Nhân với số lượng hộp
         } else if (box.boxName.includes("Large")) {
-          additionalBoxCost += 350000;
+          additionalCost = 350000 * box.usageCount; // Nhân với số lượng hộp
         }
+
+        // Tính tổng chi phí vận chuyển cho từng hộp
+        const totalBoxCost = distanceCost + additionalCost;
+
+        // Lưu chi phí vận chuyển riêng cho từng hộp
+        boxShippingCosts.push({
+          boxName: box.boxName,
+          shippingCost: totalBoxCost,
+        });
       });
 
-      const boxShippingCost = distanceCost + additionalBoxCost;
-      setBoxShippingCost(boxShippingCost);
-      // Step 3: Once both costs are available, calculate the total shipping cost
-      calculateTotalShippingCost(boxShippingCost, packingCost);
+      // Cập nhật chi phí vận chuyển cho từng hộp
+      setBoxOpShippingCost(boxShippingCosts);
+
+      // Step 3: Calculate the total shipping cost
+      const totalBoxShippingCost = boxShippingCosts.reduce(
+        (sum, box) => sum + box.shippingCost,
+        0
+      );
+      calculateTotalShippingCost(totalBoxShippingCost, packingCost);
     } catch (error) {
       console.error("Error calculating total shipping cost:", error);
     }
@@ -843,34 +860,43 @@ const CreateOrderPage = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {packingResult.map((box) => (
-                        <TableRow key={box.boxId}>
-                          <TableCell>{box.boxName}</TableCell>
-                          <TableCell align="right">
-                            {/* Nếu chọn Vận chuyển trong nước, giá nước ngoài sẽ là 0 */}
-                            {shippingType === "Vietnam" ? (
-                              "0 đ"
-                            ) : (
-                              <PriceFormat price={box.price} />
-                            )}
-                          </TableCell>
-                          <TableCell align="right">
-                            {boxShippingCost > 0 ? (
-                              <PriceFormat price={boxShippingCost} />
-                            ) : (
-                              "Chưa tính toán"
-                            )}
-                          </TableCell>
-                          <TableCell align="right">
-                            {box.fishes.map((fish) => (
-                              <Box key={fish.fishId}>
-                                {fish.quantity}x {fish.fishDescription} (
-                                {fish.fishSize} cm)
-                              </Box>
-                            ))}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {packingResult.map((box) => {
+                        // Tìm chi phí vận chuyển cho hộp hiện tại từ boxOpShippingCost
+                        const currentBoxShippingCost = boxOpShippingCost.find(
+                          (b) => b.boxName === box.boxName
+                        );
+
+                        return (
+                          <TableRow key={box.boxId}>
+                            <TableCell>{box.boxName}</TableCell>
+                            <TableCell align="right">
+                              {/* Nếu chọn Vận chuyển trong nước, giá nước ngoài sẽ là 0 */}
+                              {shippingType === "Vietnam" ? (
+                                "0 đ"
+                              ) : (
+                                <PriceFormat price={box.price} />
+                              )}
+                            </TableCell>
+                            <TableCell align="right">
+                              {currentBoxShippingCost ? (
+                                <PriceFormat
+                                  price={currentBoxShippingCost.shippingCost}
+                                />
+                              ) : (
+                                "Chưa tính toán"
+                              )}
+                            </TableCell>
+                            <TableCell align="right">
+                              {box.fishes.map((fish) => (
+                                <Box key={fish.fishId}>
+                                  {fish.quantity}x {fish.fishDescription} (
+                                  {fish.fishSize} cm)
+                                </Box>
+                              ))}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </TableContainer>
@@ -889,12 +915,18 @@ const CreateOrderPage = () => {
                 </Typography>
                 <Typography variant="h6" fontWeight="bold" mt={4} mb={2}>
                   Chi Phí Di chuyển Nội địa:{" "}
-                  {boxShippingCost > 0 ? (
-                    <PriceFormat price={boxShippingCost} />
+                  {boxOpShippingCost.length > 0 ? (
+                    <PriceFormat
+                      price={boxOpShippingCost.reduce(
+                        (total, box) => total + box.shippingCost,
+                        0
+                      )}
+                    />
                   ) : (
                     "Chưa tính toán"
                   )}
                 </Typography>
+
                 <Typography variant="h5" fontWeight="bold" mt={4} ml={2} mb={2}>
                   Tổng Chi Phí Vận Chuyển:{" "}
                   {totalShippingCost > 0 ? (

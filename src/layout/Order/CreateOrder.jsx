@@ -86,7 +86,8 @@ const CreateOrderPage = () => {
   const [calculatedDistance, setCalculatedDistance] = useState(0);
   const [distanceId, setDistanceId] = useState(null);
   const [distanceShippingCost, setDistanceShippingCost] = useState(0); // Shipping cost from distanceAPI
-  const [packingShippingCost, setPackingShippingCost] = useState(0); // Shipping cost from packing estimation
+  const [packingShippingCost, setPackingShippingCost] = useState(0);
+  const [boxShippingCost, setBoxShippingCost] = useState(0);
   const [totalShippingCost, setTotalShippingCost] = useState(0); // Sum of both shipping costs
   const [distanceRanges, setDistanceRanges] = useState([]);
 
@@ -421,7 +422,7 @@ const CreateOrderPage = () => {
       });
 
       const boxShippingCost = distanceCost + additionalBoxCost;
-
+      setBoxShippingCost(boxShippingCost);
       // Step 3: Once both costs are available, calculate the total shipping cost
       calculateTotalShippingCost(boxShippingCost, packingCost);
     } catch (error) {
@@ -834,7 +835,7 @@ const CreateOrderPage = () => {
                           Giá Vận chuyển nước ngoài
                         </TableCell>
                         <TableCell align="right">
-                          Giá Vân chuyển trong nước
+                          Giá Vận chuyển trong nước
                         </TableCell>
                         <TableCell align="right">
                           Loại Cá Được Đóng Gói
@@ -846,11 +847,16 @@ const CreateOrderPage = () => {
                         <TableRow key={box.boxId}>
                           <TableCell>{box.boxName}</TableCell>
                           <TableCell align="right">
-                            {box.price.toLocaleString()} VND
+                            {/* Nếu chọn Vận chuyển trong nước, giá nước ngoài sẽ là 0 */}
+                            {shippingType === "Vietnam" ? (
+                              "0 đ"
+                            ) : (
+                              <PriceFormat price={box.price} />
+                            )}
                           </TableCell>
                           <TableCell align="right">
-                            {distanceShippingCost > 0 ? (
-                              <PriceFormat price={distanceShippingCost} />
+                            {boxShippingCost > 0 ? (
+                              <PriceFormat price={boxShippingCost} />
                             ) : (
                               "Chưa tính toán"
                             )}
@@ -871,17 +877,20 @@ const CreateOrderPage = () => {
 
                 {/* Add Distance and Packing Cost Information */}
                 <Typography variant="h6" fontWeight="bold" mt={4} mb={2}>
-                  Chi Phí Di chuyển trong nước:{" "}
-                  {distanceShippingCost > 0 ? (
-                    <PriceFormat price={distanceShippingCost} />
+                  Chi Phí Di chuyển nước ngoài:{" "}
+                  {/* Nếu chọn Vận chuyển trong nước, giá nước ngoài sẽ là 0 */}
+                  {shippingType === "Vietnam" ? (
+                    "0 đ"
+                  ) : packingShippingCost > 0 ? (
+                    <PriceFormat price={packingShippingCost} />
                   ) : (
                     "Chưa tính toán"
                   )}
                 </Typography>
                 <Typography variant="h6" fontWeight="bold" mt={4} mb={2}>
-                  Chi Phí Hộp - Đóng gói:{" "}
-                  {packingShippingCost > 0 ? (
-                    <PriceFormat price={packingShippingCost} />
+                  Chi Phí Di chuyển Nội địa:{" "}
+                  {boxShippingCost > 0 ? (
+                    <PriceFormat price={boxShippingCost} />
                   ) : (
                     "Chưa tính toán"
                   )}

@@ -109,6 +109,7 @@ const CreateOrderPage = () => {
     distanceId: null,
     isComplete: "Pending",
   });
+  const [totalFee, setTotalFee] = useState(0);
 
   // Additional state variables to store box option data after estimation
   const [boxOptions, setBoxOptions] = useState([]);
@@ -412,6 +413,7 @@ const CreateOrderPage = () => {
 
       // Resetting the box-specific shipping costs
       let boxShippingCosts = [];
+      let calculatedTotalFee = 0; // Tổng phí vận chuyển tạm thời
 
       // Tính toán chi phí bổ sung riêng cho từng hộp
       packingResult.forEach((box) => {
@@ -431,17 +433,20 @@ const CreateOrderPage = () => {
           boxName: box.boxName,
           shippingCost: totalBoxCost,
         });
+
+        // Cộng vào tổng phí vận chuyển
+        calculatedTotalFee += totalBoxCost;
       });
 
       // Cập nhật chi phí vận chuyển cho từng hộp
       setBoxOpShippingCost(boxShippingCosts);
 
+      // Cập nhật tổng chi phí vận chuyển
+      setTotalFee(calculatedTotalFee);
+      console.log("Total shipping fee calculated:", calculatedTotalFee);
+
       // Step 3: Calculate the total shipping cost
-      const totalBoxShippingCost = boxShippingCosts.reduce(
-        (sum, box) => sum + box.shippingCost,
-        0
-      );
-      calculateTotalShippingCost(totalBoxShippingCost, packingCost);
+      calculateTotalShippingCost(calculatedTotalFee, packingCost);
     } catch (error) {
       console.error("Error calculating total shipping cost:", error);
     }
@@ -496,6 +501,7 @@ const CreateOrderPage = () => {
   const handleSubmitOrder = async () => {
     const { urlCer1, urlCer2, urlCer3, urlCer4 } = certificates;
 
+    // Validate required fields
     if (
       !receiverName ||
       !receiverAddress ||
@@ -509,10 +515,14 @@ const CreateOrderPage = () => {
     }
 
     try {
+      // Prepare initial order payload with pre-calculated totalFee
       const orderPayload = {
+        senderName,
+        senderAddress,
         receiverName,
         receiverAddress,
         receiverPhone,
+        totalFee, // Use the pre-calculated totalFee
         isShipping: "Pending",
         urlCer1,
         urlCer2,
@@ -520,13 +530,12 @@ const CreateOrderPage = () => {
         urlCer4,
       };
 
-      // Tạo đơn hàng và lấy orderId
+      // Create order and get orderId
       const orderResponse = await orderServices.createOrder(orderPayload);
       const orderId = orderResponse.data.data.id;
-
       let hasFailed = false;
 
-      // Kiểm tra nếu distanceId chưa có giá trị
+      // Ensure distanceId is available
       if (!distanceId) {
         alert(
           "Distance ID is missing. Please calculate the distance before submitting."
@@ -534,8 +543,12 @@ const CreateOrderPage = () => {
         return;
       }
 
-      // Tạo BoxOption
+      // Create OrderDetail for each BoxOption
       for (const boxOption of boxOptions) {
+        // Calculate totalShippingFee based on pre-determined values
+        const totalShippingFee = boxOption.totalShippingFee; // Use pre-calculated totalShippingFee
+
+        // Prepare payload for BoxOption creation
         const boxOptionPayload = {
           boxes: [
             {
@@ -566,8 +579,9 @@ const CreateOrderPage = () => {
           const createdBoxOptionId = boxOptionResponse.data.data[0].id;
 
           if (createdBoxOptionId) {
+            // Create OrderDetail for this BoxOption
             const orderDetailPayload = {
-              totalShippingFee: totalShippingCost,
+              totalShippingFee,
               boxOptionId: createdBoxOptionId,
               orderId,
               distanceId,
@@ -578,7 +592,9 @@ const CreateOrderPage = () => {
               "Sending Order Detail Payload:",
               JSON.stringify(orderDetailPayload)
             );
-            await orderDetailServices.createOrderDetail(orderDetailPayload);
+
+            const orderDetailResponse =
+              await orderDetailServices.createOrderDetail(orderDetailPayload);
             console.log("Order detail created successfully.");
           } else {
             console.error("No valid boxOptionId returned from the response.");
@@ -599,9 +615,11 @@ const CreateOrderPage = () => {
         }
       }
 
-      // Thông báo thành công hoặc thất bại
+      // If all BoxOptions and OrderDetails are successfully created, finalize the order
       if (!hasFailed) {
-        alert("Order created successfully!");
+        alert(
+          `Order created successfully! Tổng phí vận chuyển: ${totalFee.toLocaleString()} VND`
+        );
       } else {
         alert("Failed to create some box options. Please check the logs.");
       }
@@ -902,9 +920,9 @@ const CreateOrderPage = () => {
                 </TableContainer>
 
                 {/* Add Distance and Packing Cost Information */}
+                {/* Add Distance and Packing Cost Information */}
                 <Typography variant="h6" fontWeight="bold" mt={4} mb={2}>
                   Chi Phí Di chuyển nước ngoài:{" "}
-                  {/* Nếu chọn Vận chuyển trong nước, giá nước ngoài sẽ là 0 */}
                   {shippingType === "Vietnam" ? (
                     "0 đ"
                   ) : packingShippingCost > 0 ? (
@@ -913,6 +931,7 @@ const CreateOrderPage = () => {
                     "Chưa tính toán"
                   )}
                 </Typography>
+
                 <Typography variant="h6" fontWeight="bold" mt={4} mb={2}>
                   Chi Phí Di chuyển Nội địa:{" "}
                   {boxOpShippingCost.length > 0 ? (
@@ -929,8 +948,8 @@ const CreateOrderPage = () => {
 
                 <Typography variant="h5" fontWeight="bold" mt={4} ml={2} mb={2}>
                   Tổng Chi Phí Vận Chuyển:{" "}
-                  {totalShippingCost > 0 ? (
-                    <PriceFormat price={totalShippingCost} />
+                  {totalFee > 0 ? (
+                    <PriceFormat price={totalFee} />
                   ) : (
                     "Chưa tính toán"
                   )}

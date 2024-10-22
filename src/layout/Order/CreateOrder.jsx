@@ -948,8 +948,8 @@ const CreateOrderPage = () => {
 
                 <Typography variant="h5" fontWeight="bold" mt={4} ml={2} mb={2}>
                   Tổng Chi Phí Vận Chuyển:{" "}
-                  {totalFee > 0 ? (
-                    <PriceFormat price={totalFee} />
+                  {totalShippingCost > 0 ? (
+                    <PriceFormat price={totalShippingCost} />
                   ) : (
                     "Chưa tính toán"
                   )}

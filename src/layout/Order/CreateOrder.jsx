@@ -1,35 +1,41 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Grid,
   Card,
-  CardContent,
+  Box,
   Typography,
-  TextField,
-  Button,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  IconButton,
-  TableContainer,
   Paper,
+  Grid,
+  Divider,
+  TableContainer,
   Table,
   TableHead,
   TableRow,
   TableCell,
   TableBody,
-  Divider,
+  Button,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  IconButton,
+  CardContent,
   CardMedia,
-  Stack,
-  useTheme,
-  useMediaQuery,
-  Container,
+  LinearProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
-import { styled } from "@mui/system";
-import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import DeleteIcon from "@mui/icons-material/Delete";
 import FileUploadIcon from "@mui/icons-material/UploadFile";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+import PetsIcon from "@mui/icons-material/Pets"; // Alternative icon
+
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"; // Firebase functions
 import { storage } from "api/firebase"; // Firebase config
 import userServices from "services/userServices";
@@ -43,35 +49,8 @@ import orderDetailServices from "services/orderDetailServices"; // Order Detail 
 import boxOptionServices from "services/boxOptionServices"; // Box Option API
 import boxServices from "services/boxServices"; // Box Service
 import { PriceFormat } from "utils/tools";
-
-const CustomCard = styled(Card)(({ theme }) => ({
-  marginBottom: theme.spacing(2),
-  boxShadow: theme.shadows[3],
-  borderRadius: theme.shape.borderRadius,
-}));
-
-const CustomSelect = styled(Select)(({ theme }) => ({
-  "& .MuiSelect-select": {
-    minHeight: "36px",
-    lineHeight: "36px",
-    padding: theme.spacing(1),
-  },
-}));
-
-const CustomButton = styled(Button)(({ theme }) => ({
-  textTransform: "none",
-  fontSize: "1rem",
-  padding: theme.spacing(1.2),
-}));
-
-const ResponsiveContainer = styled(Container)(({ theme }) => ({
-  [theme.breakpoints.down("md")]: {
-    padding: theme.spacing(2),
-  },
-  [theme.breakpoints.up("lg")]: {
-    padding: theme.spacing(3),
-  },
-}));
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CreateOrderPage = () => {
   // Phase 1: Receiver Info
@@ -83,6 +62,7 @@ const CreateOrderPage = () => {
   const [receiverPhone, setReceiverPhone] = useState("");
 
   // Distance and shipping cost
+  const [branchPoints, setBranchPoints] = useState([]);
   const [calculatedDistance, setCalculatedDistance] = useState(0);
   const [distanceId, setDistanceId] = useState(null);
   const [distanceShippingCost, setDistanceShippingCost] = useState(0); // Shipping cost from distanceAPI
@@ -118,6 +98,12 @@ const CreateOrderPage = () => {
   const [distanceData, setDistanceData] = useState([]);
   const [shippingType, setShippingType] = useState("Vietnam"); // New state for shipping type
 
+  const [isEstimateLoading, setIsEstimateLoading] = useState(false); // Estimate loading
+  const [isAddFishLoading, setIsAddFishLoading] = useState(false); // Add fish loading
+  const [isCreateOrderLoading, setIsCreateOrderLoading] = useState(false); // Create order loading
+  // Dialog state variable for confirmation
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+
   // Fetch sender information from getProfile API
   useEffect(() => {
     const fetchSenderInfo = async () => {
@@ -128,13 +114,10 @@ const CreateOrderPage = () => {
           setSenderName(profileData.name);
           setSenderAddress(profileData.address);
         } else {
-          console.error(
-            "Error fetching profile data:",
-            profileResponse.message
-          );
+          toast.error("Failed to fetch profile data.");
         }
       } catch (error) {
-        console.error("Error fetching profile data:", error.message);
+        toast.error("Error fetching profile data.");
       }
     };
 
@@ -177,35 +160,26 @@ const CreateOrderPage = () => {
     const fetchBranches = async () => {
       try {
         const response = await branchServices.getBranch();
-        console.log("API Response:", response); // Check the full response
+        console.log("API Response:", response); // Kiểm tra phản hồi API
 
         // Kiểm tra phản hồi từ API
         if (response.data && response.data.success) {
           const branchData = response.data.data;
 
-          // Lọc các điểm bắt đầu duy nhất
-          const uniqueStartPoints = [
-            ...new Set(branchData.map((branch) => branch.startPoint)),
+          // Kết hợp tất cả điểm bắt đầu và kết thúc vào một mảng duy nhất
+          const allPoints = [
+            ...new Set([
+              ...branchData.map((branch) => branch.startPoint),
+              ...branchData.map((branch) => branch.endPoint),
+            ]),
           ];
 
-          // Lọc các điểm kết thúc duy nhất
-          const uniqueEndPoints = [
-            ...new Set(branchData.map((branch) => branch.endPoint)),
-          ];
-
-          // Tạo một đối tượng chứa các chi nhánh đã lọc
-          const filteredBranches = branchData.filter(
-            (branch) =>
-              uniqueStartPoints.includes(branch.startPoint) &&
-              uniqueEndPoints.includes(branch.endPoint)
-          );
-
-          setBranches(filteredBranches); // Lưu vào state
+          setBranchPoints(allPoints); // Lưu vào state
         } else {
           console.error("Failed to fetch branches:", response.data.message);
         }
       } catch (error) {
-        console.error("Error fetching branches:", error.message); // Log any errors
+        console.error("Error fetching branches:", error.message); // Log lỗi nếu có
       }
     };
 
@@ -268,16 +242,27 @@ const CreateOrderPage = () => {
 
   // Add fish to the selected fish list
   const handleAddFish = () => {
+    setIsAddFishLoading(true); // Start loading
     const selectedFish = fishList.find(
       (fish) => fish.id === parseInt(selectedFishId)
     );
+
     if (selectedFish && fishQuantity > 0) {
       setSelectedFishList([
         ...selectedFishList,
         { ...selectedFish, quantity: fishQuantity },
       ]);
-      setSelectedFishId(""); // Reset the dropdown selection
-      setFishQuantity(1); // Reset the quantity
+      setSelectedFishId(""); // Reset dropdown selection
+      setFishQuantity(1); // Reset quantity
+
+      // Add delay to simulate processing time
+      setTimeout(() => {
+        toast.success("Cá đã được thêm thành công!");
+        setIsAddFishLoading(false); // Stop loading
+      }, 500);
+    } else {
+      toast.warn("Hãy chọn cá và nhập số lượng hợp lệ.");
+      setIsAddFishLoading(false); // Stop loading
     }
   };
 
@@ -289,21 +274,16 @@ const CreateOrderPage = () => {
   const handleBranchSelection = async () => {
     if (startPoint && endPoint) {
       try {
-        // Bước 1: Tính toán khoảng cách giữa startPoint và endPoint
         const distanceMatrixResponse = await getDistanceMatrixAPI(
           startPoint,
           endPoint
         );
 
-        console.log("Distance Matrix API Response:", distanceMatrixResponse); // Log the response
-
         if (distanceMatrixResponse.success) {
           const calculatedDistance = distanceMatrixResponse.distance;
-          setCalculatedDistance(calculatedDistance); // Lưu khoảng cách đã tính toán
+          setCalculatedDistance(calculatedDistance);
 
-          // Bước 2: Lấy giá tương ứng dựa trên khoảng cách đã tính toán
           const distanceAPIResponse = await distanceServices.getDistance();
-
           if (distanceAPIResponse.success) {
             const matchingDistance = distanceAPIResponse.data.find(
               (distance) => calculatedDistance <= distance.rangeDistance
@@ -311,32 +291,29 @@ const CreateOrderPage = () => {
 
             if (matchingDistance) {
               setDistanceShippingCost(matchingDistance.price);
-              setDistanceId(matchingDistance.id); // Lưu ID của khoảng cách phù hợp
-              return matchingDistance.price; // Trả về chi phí vận chuyển
+              setDistanceId(matchingDistance.id);
+              return matchingDistance.price;
             } else {
-              console.error(
-                "No matching distance found for the calculated range."
-              );
-              return 0; // Trả về 0 nếu không tìm thấy khoảng cách phù hợp
+              toast.warn("No matching distance found.");
+              return 0;
             }
           } else {
-            console.error("Error fetching distance data");
-            return 0; // Trả về 0 nếu API khoảng cách không thành công
+            toast.error("Failed to fetch distance data.");
+            return 0;
           }
         } else {
-          console.error("Distance Matrix API returned an error");
-          return 0; // Trả về 0 nếu API tính khoảng cách không thành công
+          toast.error("Distance Matrix API error.");
+          return 0;
         }
       } catch (error) {
-        console.error("Error calculating distance:", error.message);
-        return 0; // Trả về 0 trong trường hợp có lỗi
+        toast.error("Error calculating distance.");
+        return 0;
       }
     } else {
-      console.error("No startPoint or endPoint selected.");
-      return 0; // Trả về 0 nếu không có startPoint hoặc endPoint được chọn
+      toast.warn("Please select both start and end points.");
+      return 0;
     }
   };
-
   // Calculate packing cost and return packing shipping cost
   const handleEstimatePacking = async () => {
     try {
@@ -400,56 +377,51 @@ const CreateOrderPage = () => {
     }
   };
 
-  // New function to calculate total shipping cost
+  // Estimate the total shipping cost
   const calculateTotalShippingCostWrapper = async () => {
-    try {
-      // Step 1: Calculate the distance and get the distance shipping cost
-      const distanceCost = await handleBranchSelection();
-      console.log("distance", distanceCost);
+    setIsEstimateLoading(true); // Start loading
 
-      // Step 2: Calculate the packing cost
+    try {
+      // Calculate the distance cost
+      const distanceCost = await handleBranchSelection();
+
+      // Calculate the packing cost
       const packingCost = await handleEstimatePacking();
-      console.log("packing", packingCost);
 
       // Resetting the box-specific shipping costs
       let boxShippingCosts = [];
-      let calculatedTotalFee = 0; // Tổng phí vận chuyển tạm thời
+      let calculatedTotalFee = 0; // Temporary total fee
 
-      // Tính toán chi phí bổ sung riêng cho từng hộp
+      // Calculate additional costs for each box
       packingResult.forEach((box) => {
         let additionalCost = 0;
 
         if (box.boxName.includes("Medium")) {
-          additionalCost = 150000 * box.usageCount; // Nhân với số lượng hộp
+          additionalCost = 150000 * box.usageCount;
         } else if (box.boxName.includes("Large")) {
-          additionalCost = 350000 * box.usageCount; // Nhân với số lượng hộp
+          additionalCost = 350000 * box.usageCount;
         }
 
-        // Tính tổng chi phí vận chuyển cho từng hộp
         const totalBoxCost = distanceCost + additionalCost;
-
-        // Lưu chi phí vận chuyển riêng cho từng hộp
         boxShippingCosts.push({
           boxName: box.boxName,
           shippingCost: totalBoxCost,
         });
 
-        // Cộng vào tổng phí vận chuyển
         calculatedTotalFee += totalBoxCost;
       });
 
-      // Cập nhật chi phí vận chuyển cho từng hộp
       setBoxOpShippingCost(boxShippingCosts);
-
-      // Cập nhật tổng chi phí vận chuyển
       setTotalFee(calculatedTotalFee);
-      console.log("Total shipping fee calculated:", calculatedTotalFee);
 
-      // Step 3: Calculate the total shipping cost
       calculateTotalShippingCost(calculatedTotalFee, packingCost);
+
+      toast.success("Tính tổng chi phí vận chuyển thành công!");
     } catch (error) {
-      console.error("Error calculating total shipping cost:", error);
+      toast.error("Lỗi khi tính tổng chi phí vận chuyển.");
     }
+
+    setIsEstimateLoading(false); // Stop loading
   };
 
   // Function to calculate the total cost
@@ -497,58 +469,63 @@ const CreateOrderPage = () => {
     }
   };
 
-  // Submit Order
-  const handleSubmitOrder = async () => {
-    const { urlCer1, urlCer2, urlCer3, urlCer4 } = certificates;
-
-    // Validate required fields
+  // Open confirmation dialog
+  const handleOpenConfirmDialog = () => {
     if (
       !receiverName ||
       !receiverAddress ||
       !receiverPhone ||
-      (!urlCer1 && !urlCer2 && !urlCer3 && !urlCer4)
+      (!certificates.urlCer1 &&
+        !certificates.urlCer2 &&
+        !certificates.urlCer3 &&
+        !certificates.urlCer4)
     ) {
-      alert(
-        "Please fill in all required fields and upload at least one certificate."
-      );
+      toast.warn("Vui lòng điền đầy đủ thông tin.");
       return;
     }
 
+    setIsConfirmDialogOpen(true);
+  };
+
+  // Close confirmation dialog
+  const handleCloseConfirmDialog = () => {
+    setIsConfirmDialogOpen(false);
+  };
+
+  // Confirm and create order
+  const handleConfirmCreateOrder = () => {
+    setIsConfirmDialogOpen(false); // Close dialog
+    handleSubmitOrder(); // Proceed with order creation
+  };
+
+  // Submit Order
+  const handleSubmitOrder = async () => {
+    setIsCreateOrderLoading(true); // Start loading
+
     try {
-      // Prepare initial order payload with pre-calculated totalFee
+      // Prepare order payload
       const orderPayload = {
         senderName,
         senderAddress,
         receiverName,
         receiverAddress,
         receiverPhone,
-        totalFee, // Use the pre-calculated totalFee
+        totalFee,
         isShipping: "Pending",
-        urlCer1,
-        urlCer2,
-        urlCer3,
-        urlCer4,
+        ...certificates,
       };
 
-      // Create order and get orderId
       const orderResponse = await orderServices.createOrder(orderPayload);
       const orderId = orderResponse.data.data.id;
-      let hasFailed = false;
 
-      // Ensure distanceId is available
       if (!distanceId) {
-        alert(
-          "Distance ID is missing. Please calculate the distance before submitting."
-        );
+        toast.warn("Distance ID is missing. Calculate distance first.");
+        setIsCreateOrderLoading(false);
         return;
       }
 
-      // Create OrderDetail for each BoxOption
       for (const boxOption of boxOptions) {
-        // Calculate totalShippingFee based on pre-determined values
-        const totalShippingFee = boxOption.totalShippingFee; // Use pre-calculated totalShippingFee
-
-        // Prepare payload for BoxOption creation
+        const totalShippingFee = boxOption.totalShippingFee;
         const boxOptionPayload = {
           boxes: [
             {
@@ -561,14 +538,8 @@ const CreateOrderPage = () => {
           ],
         };
 
-        console.log(
-          "Sending BoxOption Payload:",
-          JSON.stringify(boxOptionPayload)
-        );
-
         const boxOptionResponse =
           await boxOptionServices.createBoxOption(boxOptionPayload);
-        console.log("BoxOption Response:", boxOptionResponse);
 
         if (
           boxOptionResponse?.status === 200 &&
@@ -578,412 +549,536 @@ const CreateOrderPage = () => {
         ) {
           const createdBoxOptionId = boxOptionResponse.data.data[0].id;
 
-          if (createdBoxOptionId) {
-            // Create OrderDetail for this BoxOption
-            const orderDetailPayload = {
-              totalShippingFee,
-              boxOptionId: createdBoxOptionId,
-              orderId,
-              distanceId,
-              isComplete: "0",
-            };
+          const orderDetailPayload = {
+            totalShippingFee,
+            boxOptionId: createdBoxOptionId,
+            orderId,
+            distanceId,
+            isComplete: "0",
+          };
 
-            console.log(
-              "Sending Order Detail Payload:",
-              JSON.stringify(orderDetailPayload)
-            );
+          await orderDetailServices.createOrderDetail(orderDetailPayload);
 
-            const orderDetailResponse =
-              await orderDetailServices.createOrderDetail(orderDetailPayload);
-            console.log("Order detail created successfully.");
-          } else {
-            console.error("No valid boxOptionId returned from the response.");
-            hasFailed = true;
-          }
-        } else {
-          console.error(
-            "Failed to create box option. Full response:",
-            boxOptionResponse
+          toast.success(
+            `Đơn hàng đã được tạo thành công! Tổng phí: ${totalFee.toLocaleString()} VND`
           );
-          hasFailed = true;
-        }
-
-        if (!boxOptionResponse) {
-          console.error("No response received from BoxOption API.");
-          hasFailed = true;
+        } else {
+          toast.error("Failed to create box option.");
           break;
         }
       }
-
-      // If all BoxOptions and OrderDetails are successfully created, finalize the order
-      if (!hasFailed) {
-        alert(
-          `Order created successfully! Tổng phí vận chuyển: ${totalFee.toLocaleString()} VND`
-        );
-      } else {
-        alert("Failed to create some box options. Please check the logs.");
-      }
     } catch (error) {
-      console.error("Error creating order:", error.message, error);
-      alert("An error occurred while creating the order. Please try again.");
+      toast.error("Lỗi khi tạo đơn hàng.");
     }
-  };
 
+    setIsCreateOrderLoading(false); // Stop loading
+  };
   return (
-    <Box py={6} className="container">
+    <Box py={4} className="container">
       <Typography
         variant="h4"
         fontWeight="bold"
         gutterBottom
         textAlign="center"
-        color="primary"
+        sx={{ color: "#86250e" }} // Primary color
       >
         Tạo Đơn Hàng Mới
       </Typography>
 
       <Grid container spacing={4}>
-        {/* Shipping Type Selection */}
-        <Grid item xs={12} md={6} mt={5}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
-                Chọn Loại Vận Chuyển
-              </Typography>
-              <Divider />
-              <FormControl fullWidth margin="normal">
-                <InputLabel id="shipping-type-label">
-                  Loại Vận Chuyển
-                </InputLabel>
-                <Select
-                  labelId="shipping-type-label"
-                  value={shippingType}
-                  onChange={(e) => setShippingType(e.target.value)}
-                  fullWidth
-                >
-                  <MenuItem value="Vietnam">Vận Chuyển Nội Địa</MenuItem>
-                  <MenuItem value="Japan">Vận Chuyển Từ Nhật</MenuItem>
-                </Select>
-              </FormControl>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Sender Info */}
-        <Grid item xs={12} md={6} lg={4}>
-          <Card variant="outlined" sx={{ p: 2, borderRadius: 2, boxShadow: 3 }}>
-            <CardContent>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Thông Tin Người Gửi
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Stack spacing={2}>
-                <TextField
-                  label="Tên Người Gửi"
-                  fullWidth
-                  value={senderName}
-                  onChange={(e) => setSenderName(e.target.value)}
-                  placeholder={senderName}
-                />
-                <TextField
-                  label="Địa Chỉ Người Gửi"
-                  fullWidth
-                  value={senderAddress}
-                  onChange={(e) => setSenderAddress(e.target.value)}
-                  placeholder={senderAddress}
-                />
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Branch Selection */}
-        <Grid item xs={12} md={6} lg={4}>
-          <Card variant="outlined" sx={{ p: 2, borderRadius: 2, boxShadow: 3 }}>
-            <CardContent>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Chọn Kho Gửi và Nhận
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Stack spacing={2}>
-                <FormControl fullWidth>
-                  <InputLabel id="start-point-label">Kho Gửi</InputLabel>
-                  <Select
-                    labelId="start-point-label"
-                    value={startPoint}
-                    onChange={(e) => setStartPoint(e.target.value)}
-                    fullWidth
-                  >
-                    {branches.length > 0 ? (
-                      branches.map((branch) => (
-                        <MenuItem key={branch.id} value={branch.startPoint}>
-                          {branch.startPoint}
-                        </MenuItem>
-                      ))
-                    ) : (
-                      <MenuItem disabled>No branches available</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <InputLabel id="end-point-label">Kho Nhận</InputLabel>
-                  <Select
-                    labelId="end-point-label"
-                    value={endPoint}
-                    onChange={(e) => setEndPoint(e.target.value)}
-                    fullWidth
-                  >
-                    {branches.length > 0 ? (
-                      branches
-                        .filter((branch) => branch.endPoint !== startPoint)
-                        .map((branch) => (
-                          <MenuItem key={branch.id} value={branch.endPoint}>
-                            {branch.endPoint}
-                          </MenuItem>
-                        ))
-                    ) : (
-                      <MenuItem disabled>No branches available</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Receiver Info */}
-        <Grid item xs={12} md={6} mt={5}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
-                Thông Tin Người Nhận
-              </Typography>
-              <Divider />
-              <TextField
-                label="Tên Người Nhận"
-                fullWidth
-                margin="normal"
-                value={receiverName}
-                onChange={(e) => setReceiverName(e.target.value)}
-              />
-              <TextField
-                label="Địa Chỉ Người Nhận"
-                fullWidth
-                margin="normal"
-                value={receiverAddress}
-                onChange={(e) => setReceiverAddress(e.target.value)}
-              />
-              <TextField
-                label="Số Điện Thoại Người Nhận"
-                fullWidth
-                margin="normal"
-                value={receiverPhone}
-                onChange={(e) => setReceiverPhone(e.target.value)}
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Fish Selection */}
+        {/* Section 1: Information */}
         <Grid item xs={12}>
-          <Card>
+          <Card
+            sx={{
+              marginBottom: 2,
+              boxShadow: 3,
+              borderRadius: 2,
+              border: "2px solid #86250e",
+            }}
+          >
             <CardContent>
               <Typography variant="h5" fontWeight="bold" gutterBottom>
-                Thông Tin Cá
+                Thông Tin Đơn Hàng
               </Typography>
-              <Divider />
-              <FormControl fullWidth margin="normal">
-                <InputLabel id="fish-select-label">Chọn Cá</InputLabel>
-                <Select
-                  labelId="fish-select-label"
-                  value={selectedFishId}
-                  onChange={(e) => setSelectedFishId(e.target.value)}
-                  fullWidth
-                >
-                  {fishList.map((fish) => (
-                    <MenuItem key={fish.id} value={fish.id}>
-                      {`${fish.size} cm (${fish.description})`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                label="Số Lượng"
-                type="number"
-                fullWidth
-                margin="normal"
-                value={fishQuantity}
-                onChange={(e) => setFishQuantity(parseInt(e.target.value))}
-                inputProps={{ min: 1 }}
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<AddCircleOutlineIcon />}
-                onClick={handleAddFish}
-                sx={{ marginTop: "20px", width: "100%" }}
-              >
-                Thêm Cá
-              </Button>
-              <TableContainer component={Paper} sx={{ mt: 2 }}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Cá</TableCell>
-                      <TableCell align="right">Số Lượng</TableCell>
-                      <TableCell align="right">Hành Động</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {selectedFishList.map((fish) => (
-                      <TableRow key={fish.id}>
-                        <TableCell>{`${fish.size} cm (${fish.description})`}</TableCell>
-                        <TableCell align="right">{fish.quantity}</TableCell>
-                        <TableCell align="right">
-                          <IconButton onClick={() => handleRemoveFish(fish.id)}>
-                            <DeleteIcon color="error" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <Divider sx={{ mb: 2 }} />
+
+              <Grid container spacing={3}>
+                {/* Shipping Type Selection */}
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <InputLabel id="shipping-type-label">
+                      Loại Vận Chuyển
+                    </InputLabel>
+                    <Select
+                      labelId="shipping-type-label"
+                      value={shippingType}
+                      onChange={(e) => {
+                        const selectedType = e.target.value;
+                        setShippingType(selectedType);
+
+                        // Nếu chọn 'Japan', thiết lập 'Kho Gửi' là 'Tp. Hồ Chí Minh'
+                        if (selectedType === "Japan") {
+                          setStartPoint("Tp. Hồ Chí Minh");
+                        }
+                      }}
+                    >
+                      <MenuItem value="Vietnam">Vận Chuyển Nội Địa</MenuItem>
+                      <MenuItem value="Japan">Vận Chuyển Từ Nhật</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <InputLabel id="start-point-label">Kho Gửi</InputLabel>
+                    <Select
+                      labelId="start-point-label"
+                      value={startPoint}
+                      onChange={(e) => setStartPoint(e.target.value)}
+                    >
+                      {branchPoints.map((point, index) => (
+                        <MenuItem key={index} value={point}>
+                          {point}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth sx={{ mt: 2 }}>
+                    <InputLabel id="end-point-label">Kho Nhận</InputLabel>
+                    <Select
+                      labelId="end-point-label"
+                      value={endPoint}
+                      onChange={(e) => setEndPoint(e.target.value)}
+                    >
+                      {branchPoints.map((point, index) => (
+                        <MenuItem key={index} value={point}>
+                          {point}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Sender Information */}
+                <Grid item xs={12} md={6}>
+                  <Card
+                    sx={{
+                      marginBottom: 2,
+                      boxShadow: 3,
+                      borderRadius: 2,
+                      border: "2px solid #d35400", // Secondary color
+                    }}
+                  >
+                    <CardContent>
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        gutterBottom
+                        sx={{ color: "#d35400" }}
+                      >
+                        Thông Tin Người Gửi
+                      </Typography>
+                      <Divider sx={{ mb: 2 }} />
+
+                      <TextField
+                        label="Tên Người Gửi"
+                        value={senderName}
+                        onChange={(e) => setSenderName(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                      />
+                      <TextField
+                        label="Địa Chỉ Người Gửi"
+                        value={senderAddress}
+                        onChange={(e) => setSenderAddress(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                      />
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Receiver Information */}
+                <Grid item xs={12} md={6}>
+                  <Card
+                    sx={{
+                      marginBottom: 2,
+                      boxShadow: 3,
+                      borderRadius: 2,
+                      border: "2px solid #239b56", // Accent color
+                    }}
+                  >
+                    <CardContent>
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        gutterBottom
+                        sx={{ color: "#239b56" }}
+                      >
+                        Thông Tin Người Nhận
+                      </Typography>
+                      <Divider sx={{ mb: 2 }} />
+
+                      <TextField
+                        label="Tên Người Nhận"
+                        value={receiverName}
+                        onChange={(e) => setReceiverName(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                      />
+                      <TextField
+                        label="Địa Chỉ Người Nhận"
+                        value={receiverAddress}
+                        onChange={(e) => setReceiverAddress(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                      />
+                      <TextField
+                        label="Số Điện Thoại Người Nhận"
+                        value={receiverPhone}
+                        onChange={(e) => setReceiverPhone(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                      />
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         </Grid>
 
-        {packingResult.length > 0 && (
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h5" fontWeight="bold" gutterBottom>
-                  Thông Tin Hộp Đóng Gói
-                </Typography>
-                <Divider />
-                <TableContainer component={Paper} sx={{ mt: 2 }}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Loại Hộp</TableCell>
-                        <TableCell align="right">
-                          Giá Vận chuyển nước ngoài
-                        </TableCell>
-                        <TableCell align="right">
-                          Giá Vận chuyển trong nước
-                        </TableCell>
-                        <TableCell align="right">
-                          Loại Cá Được Đóng Gói
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {packingResult.map((box) => {
-                        // Tìm chi phí vận chuyển cho hộp hiện tại từ boxOpShippingCost
+        {/* Section 2: Estimate */}
+        {/* Section 2: Estimate */}
+        <Grid item xs={12}>
+          <Card
+            sx={{
+              marginBottom: 2,
+              boxShadow: 3,
+              borderRadius: 2,
+              border: "2px solid #86250e",
+            }}
+          >
+            <CardContent>
+              <Typography variant="h5" fontWeight="bold" gutterBottom>
+                Ước Tính Chi Phí
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+
+              <Grid container spacing={3}>
+                {/* Fish Selection */}
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel id="fish-select-label">Chọn Cá</InputLabel>
+                    <Select
+                      labelId="fish-select-label"
+                      value={selectedFishId}
+                      onChange={(e) => setSelectedFishId(e.target.value)}
+                    >
+                      {fishList.map((fish) => (
+                        <MenuItem key={fish.id} value={fish.id}>
+                          {`${fish.size} cm (${fish.description})`}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    label="Số Lượng"
+                    type="number"
+                    value={fishQuantity}
+                    onChange={(e) => setFishQuantity(parseInt(e.target.value))}
+                    fullWidth
+                    margin="normal"
+                    inputProps={{ min: 1 }}
+                  />
+
+                  <Button
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#d35400",
+                      color: "#fff",
+                      "&:hover": { backgroundColor: "#b34100" },
+                      width: "100%",
+                      mt: 2,
+                    }}
+                    onClick={handleAddFish}
+                    disabled={isAddFishLoading} // Disable button when loading
+                  >
+                    {isAddFishLoading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      <>
+                        <AddCircleOutlineIcon />
+                        Thêm Cá
+                      </>
+                    )}
+                  </Button>
+
+                  <TableContainer component={Paper} sx={{ mt: 2 }}>
+                    <Table>
+                      <TableHead sx={{ backgroundColor: "#239b56" }}>
+                        {" "}
+                        {/* Green header */}
+                        <TableRow>
+                          <TableCell sx={{ color: "#fff" }}>Cá</TableCell>
+                          <TableCell align="right" sx={{ color: "#fff" }}>
+                            Số Lượng
+                          </TableCell>
+                          <TableCell align="right" sx={{ color: "#fff" }}>
+                            Hành Động
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {selectedFishList.map((fish) => (
+                          <TableRow key={fish.id}>
+                            <TableCell>{`${fish.size} cm (${fish.description})`}</TableCell>
+                            <TableCell align="right">{fish.quantity}</TableCell>
+                            <TableCell align="right">
+                              <IconButton
+                                onClick={() => handleRemoveFish(fish.id)}
+                              >
+                                <DeleteIcon color="error" />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
+
+                {/* Packing Results */}
+                <Grid item xs={12} md={6}>
+                  <Button
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#1b4f72",
+                      color: "#fff",
+                      "&:hover": { backgroundColor: "#163d59" },
+                      width: "100%",
+                      mt: 2,
+                    }}
+                    onClick={calculateTotalShippingCostWrapper}
+                    disabled={isEstimateLoading} // Disable button when loading
+                  >
+                    {isEstimateLoading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      "Tính Tổng Chi Phí Vận Chuyển"
+                    )}
+                  </Button>
+
+                  {packingResult.length > 0 && (
+                    <Grid container spacing={3} sx={{ mt: 4 }}>
+                      {packingResult.map((box, index) => {
                         const currentBoxShippingCost = boxOpShippingCost.find(
                           (b) => b.boxName === box.boxName
                         );
+                        const totalShippingFee =
+                          (shippingType !== "Vietnam" ? box.price : 0) +
+                          (currentBoxShippingCost?.shippingCost || 0);
+
+                        // Define colors for different boxes
+                        const colors = [
+                          "#86250e",
+                          "#d35400",
+                          "#1b4f72",
+                          "#239b56",
+                        ];
+                        const boxColor = colors[index % colors.length];
 
                         return (
-                          <TableRow key={box.boxId}>
-                            <TableCell>{box.boxName}</TableCell>
-                            <TableCell align="right">
-                              {/* Nếu chọn Vận chuyển trong nước, giá nước ngoài sẽ là 0 */}
-                              {shippingType === "Vietnam" ? (
-                                "0 đ"
-                              ) : (
-                                <PriceFormat price={box.price} />
-                              )}
-                            </TableCell>
-                            <TableCell align="right">
-                              {currentBoxShippingCost ? (
-                                <PriceFormat
-                                  price={currentBoxShippingCost.shippingCost}
-                                />
-                              ) : (
-                                "Chưa tính toán"
-                              )}
-                            </TableCell>
-                            <TableCell align="right">
-                              {box.fishes.map((fish) => (
-                                <Box key={fish.fishId}>
-                                  {fish.quantity}x {fish.fishDescription} (
-                                  {fish.fishSize} cm)
+                          <Grid item xs={12} sm={6} key={box.boxId}>
+                            <Card
+                              sx={{
+                                padding: 2,
+                                border: `2px solid ${boxColor}`,
+                                borderRadius: 2,
+                                boxShadow: 3,
+                                backgroundColor: `${boxColor}20`,
+                              }}
+                            >
+                              <Typography
+                                variant="h6"
+                                fontWeight="bold"
+                                textAlign="center"
+                                gutterBottom
+                                sx={{ color: boxColor }}
+                              >
+                                {box.boxName}
+                              </Typography>
+
+                              <Divider sx={{ mb: 2 }} />
+
+                              {/* Total Shipping Fee */}
+                              <Box display="flex" alignItems="center" mb={2}>
+                                <MonetizationOnIcon sx={{ color: boxColor }} />
+                                <Typography
+                                  variant="h5"
+                                  fontWeight="bold"
+                                  ml={1}
+                                  sx={{ color: boxColor }}
+                                >
+                                  Tổng Phí của hộp:{" "}
+                                  <PriceFormat price={totalShippingFee} />
+                                </Typography>
+                              </Box>
+
+                              {/* Cost Breakdown */}
+                              <Box mb={2}>
+                                <Box display="flex" alignItems="center" mb={1}>
+                                  <LocalShippingIcon sx={{ color: boxColor }} />
+                                  <Typography variant="body1" ml={1}>
+                                    Phí Nước Ngoài:{" "}
+                                    {shippingType === "Vietnam" ? (
+                                      "0 đ"
+                                    ) : (
+                                      <PriceFormat price={box.price} />
+                                    )}
+                                  </Typography>
                                 </Box>
-                              ))}
-                            </TableCell>
-                          </TableRow>
+
+                                <LinearProgress
+                                  variant="determinate"
+                                  value={(box.price / totalShippingFee) * 100}
+                                  sx={{
+                                    height: 10,
+                                    backgroundColor: "#e0e0e0",
+                                    mb: 2,
+                                    "& .MuiLinearProgress-bar": {
+                                      backgroundColor: boxColor,
+                                    },
+                                  }}
+                                />
+
+                                <Box display="flex" alignItems="center" mb={1}>
+                                  <LocalShippingIcon sx={{ color: boxColor }} />
+                                  <Typography variant="body1" ml={1}>
+                                    Phí Nội Địa:{" "}
+                                    {currentBoxShippingCost ? (
+                                      <PriceFormat
+                                        price={
+                                          currentBoxShippingCost.shippingCost
+                                        }
+                                      />
+                                    ) : (
+                                      "Chưa tính toán"
+                                    )}
+                                  </Typography>
+                                </Box>
+
+                                <LinearProgress
+                                  variant="determinate"
+                                  value={
+                                    currentBoxShippingCost
+                                      ? (currentBoxShippingCost.shippingCost /
+                                          totalShippingFee) *
+                                        100
+                                      : 0
+                                  }
+                                  sx={{
+                                    height: 10,
+                                    backgroundColor: "#e0e0e0",
+                                    "& .MuiLinearProgress-bar": {
+                                      backgroundColor: boxColor,
+                                    },
+                                  }}
+                                />
+                              </Box>
+
+                              {/* Fish Details */}
+                              <Box>
+                                <Typography
+                                  variant="h6"
+                                  fontWeight="bold"
+                                  gutterBottom
+                                >
+                                  Cá Được Đóng Gói
+                                </Typography>
+                                <Paper
+                                  variant="outlined"
+                                  sx={{
+                                    padding: 1,
+                                    borderRadius: 1,
+                                    mt: 1,
+                                    backgroundColor: "#f5f5f5",
+                                  }}
+                                >
+                                  {box.fishes.map((fish) => (
+                                    <Box
+                                      key={fish.fishId}
+                                      display="flex"
+                                      alignItems="center"
+                                      mb={1}
+                                    >
+                                      <PetsIcon color="action" />
+                                      <Typography variant="body2" ml={1}>
+                                        {fish.quantity}x {fish.fishDescription}{" "}
+                                        ({fish.fishSize} cm)
+                                      </Typography>
+                                    </Box>
+                                  ))}
+                                </Paper>
+                              </Box>
+                            </Card>
+                          </Grid>
                         );
                       })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-
-                {/* Add Distance and Packing Cost Information */}
-                {/* Add Distance and Packing Cost Information */}
-                <Typography variant="h6" fontWeight="bold" mt={4} mb={2}>
-                  Chi Phí Di chuyển nước ngoài:{" "}
-                  {shippingType === "Vietnam" ? (
-                    "0 đ"
-                  ) : packingShippingCost > 0 ? (
-                    <PriceFormat price={packingShippingCost} />
-                  ) : (
-                    "Chưa tính toán"
+                    </Grid>
                   )}
-                </Typography>
-
-                <Typography variant="h6" fontWeight="bold" mt={4} mb={2}>
-                  Chi Phí Di chuyển Nội địa:{" "}
-                  {boxOpShippingCost.length > 0 ? (
-                    <PriceFormat
-                      price={boxOpShippingCost.reduce(
-                        (total, box) => total + box.shippingCost,
-                        0
-                      )}
-                    />
-                  ) : (
-                    "Chưa tính toán"
-                  )}
-                </Typography>
-
-                <Typography variant="h5" fontWeight="bold" mt={4} ml={2} mb={2}>
-                  Tổng Chi Phí Vận Chuyển:{" "}
-                  {totalShippingCost > 0 ? (
-                    <PriceFormat price={totalShippingCost} />
-                  ) : (
-                    "Chưa tính toán"
-                  )}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-
-        {/* Calculate Total Shipping Cost Button */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={calculateTotalShippingCostWrapper}
-                fullWidth
-                sx={{ marginTop: "20px" }}
-              >
-                Tính Tổng Chi Phí Vận Chuyển
-              </Button>
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Certificate Upload Section */}
+        {/* Display Total Fee */}
         <Grid item xs={12}>
-          <Card>
+          <Box
+            sx={{
+              padding: 2,
+              textAlign: "center",
+              border: "2px solid #86250e",
+              borderRadius: 2,
+              boxShadow: 3,
+              marginBottom: 2,
+              backgroundColor: "#f5f5f5",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#86250e" }}
+            >
+              Tổng Chi Phí Toàn Bộ Đơn Hàng: <PriceFormat price={totalFee} />
+            </Typography>
+          </Box>
+        </Grid>
+
+        {/* Section 3: Upload Certificate */}
+        <Grid item xs={12}>
+          <Card
+            sx={{
+              marginBottom: 2,
+              boxShadow: 3,
+              borderRadius: 2,
+              border: "2px solid #1b4f72", // Navy Blue border
+            }}
+          >
             <CardContent>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
+              <Typography
+                variant="h5"
+                fontWeight="bold"
+                gutterBottom
+                sx={{ color: "#1b4f72" }}
+              >
                 Upload Giấy Chứng Nhận
               </Typography>
-              <Divider />
+              <Divider sx={{ mb: 2 }} />
+
               <Grid container spacing={2}>
                 {Array.from({ length: certificateCount }, (_, index) => (
                   <Grid item xs={12} sm={6} key={`urlCer${index + 1}`}>
@@ -993,6 +1088,11 @@ const CreateOrderPage = () => {
                       fullWidth
                       startIcon={<FileUploadIcon />}
                       disabled={uploadingCert[`cert${index + 1}`]}
+                      sx={{
+                        borderColor: "#239b56",
+                        color: "#239b56",
+                        "&:hover": { borderColor: "#1e8449", color: "#1e8449" },
+                      }}
                     >
                       {`Chọn Giấy Chứng Nhận ${index + 1}`}
                       <input
@@ -1003,8 +1103,15 @@ const CreateOrderPage = () => {
                         }
                       />
                     </Button>
+
                     {certificates[`urlCer${index + 1}`] && (
-                      <Card sx={{ mt: 2 }}>
+                      <Card
+                        sx={{
+                          mt: 2,
+                          border: "1px solid #86250e", // Deep Reddish-Brown border
+                          borderRadius: 2,
+                        }}
+                      >
                         <CardMedia
                           component="img"
                           height="140"
@@ -1015,6 +1122,7 @@ const CreateOrderPage = () => {
                     )}
                   </Grid>
                 ))}
+
                 {certificateCount < 4 && (
                   <Grid item xs={12} sm={6}>
                     <Button
@@ -1022,6 +1130,11 @@ const CreateOrderPage = () => {
                       color="secondary"
                       fullWidth
                       onClick={handleAddCertificate}
+                      sx={{
+                        backgroundColor: "#d35400",
+                        color: "#fff",
+                        "&:hover": { backgroundColor: "#b34100" },
+                      }}
                     >
                       Thêm Giấy Chứng Nhận
                     </Button>
@@ -1032,21 +1145,70 @@ const CreateOrderPage = () => {
           </Card>
         </Grid>
 
-        {/* Submit Order Button */}
+        {/* Section 4: Create Order Button */}
         <Grid item xs={12}>
-          <Card>
+          <Card
+            sx={{
+              marginBottom: 2,
+              boxShadow: 3,
+              borderRadius: 2,
+              border: "2px solid #239b56",
+            }}
+          >
             <CardContent>
               <Button
                 variant="contained"
-                color="primary"
-                onClick={handleSubmitOrder}
-                sx={{ marginTop: "20px", width: "100%" }}
+                sx={{
+                  backgroundColor: "#239b56",
+                  color: "#fff",
+                  "&:hover": {
+                    backgroundColor: "#1e8449",
+                  },
+                  width: "100%",
+                }}
+                onClick={handleOpenConfirmDialog}
+                disabled={isCreateOrderLoading} // Disable button when loading
               >
-                Tạo Đơn Hàng
+                {isCreateOrderLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Tạo Đơn Hàng"
+                )}
               </Button>
             </CardContent>
           </Card>
         </Grid>
+
+        {/* Confirmation Dialog */}
+        <Dialog
+          open={isConfirmDialogOpen}
+          onClose={handleCloseConfirmDialog}
+          aria-labelledby="confirm-dialog-title"
+          aria-describedby="confirm-dialog-description"
+        >
+          <DialogTitle id="confirm-dialog-title">
+            Xác nhận tạo đơn hàng
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="confirm-dialog-description">
+              Bạn có chắc chắn muốn tạo đơn hàng với các thông tin đã nhập
+              không?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseConfirmDialog} color="secondary">
+              Hủy
+            </Button>
+            <Button
+              onClick={handleConfirmCreateOrder}
+              color="primary"
+              variant="contained"
+              autoFocus
+            >
+              Xác nhận
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Grid>
     </Box>
   );

@@ -104,6 +104,8 @@ const CreateOrderPage = () => {
   // Dialog state variable for confirmation
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
+  const userId = sessionStorage.getItem("userId");
+
   // Fetch sender information from getProfile API
   useEffect(() => {
     const fetchSenderInfo = async () => {
@@ -314,7 +316,6 @@ const CreateOrderPage = () => {
       return 0;
     }
   };
-  // Calculate packing cost and return packing shipping cost
   const handleEstimatePacking = async () => {
     try {
       const fishListForAPI = selectedFishList.map((fish) => ({
@@ -347,37 +348,33 @@ const CreateOrderPage = () => {
 
       const boxResponse = await estimatePacking(requestBody);
 
-      // Check if the response contains the boxes
       if (boxResponse && boxResponse.boxes) {
-        setPackingResult(boxResponse.boxes); // Update the packing result state
-        setPackingShippingCost(boxResponse.boxes.totalPrice); // Set the packing shipping cost
+        setPackingResult(boxResponse.boxes); // Update packing result
 
-        // Store the box options and select a default (optional)
+        // Include boxName in boxOptions for matching
         const boxOptionsData = boxResponse.boxes.map((box) => ({
           boxId: box.boxId,
+          boxName: box.boxName, // Include boxName here
           fishes: box.fishes.map((fish) => ({
             fishId: fish.fishId,
             quantity: fish.quantity,
           })),
         }));
 
-        setBoxOptions(boxOptionsData); // Store the box options in the state
-        setSelectedBoxOption(boxOptionsData[0]); // Optionally select the first box option by default
+        setBoxOptions(boxOptionsData);
+        console.log("Box options set:", boxOptionsData);
 
-        console.log("Box options stored:", boxOptionsData);
-        setPackingShippingCost(boxResponse.totalPrice);
         return boxResponse.totalPrice; // Return packing shipping cost
       } else {
-        console.error("Error in response structure:", boxResponse);
+        toast.error("Error in response structure.");
         return 0;
       }
     } catch (error) {
-      console.error("Error estimating packing:", error.message);
+      toast.error("Error estimating packing.");
       return 0;
     }
   };
 
-  // Estimate the total shipping cost
   const calculateTotalShippingCostWrapper = async () => {
     setIsEstimateLoading(true); // Start loading
 
@@ -388,11 +385,10 @@ const CreateOrderPage = () => {
       // Calculate the packing cost
       const packingCost = await handleEstimatePacking();
 
-      // Resetting the box-specific shipping costs
       let boxShippingCosts = [];
       let calculatedTotalFee = 0; // Temporary total fee
 
-      // Calculate additional costs for each box
+      // Calculate costs for each box
       packingResult.forEach((box) => {
         let additionalCost = 0;
 
@@ -403,16 +399,20 @@ const CreateOrderPage = () => {
         }
 
         const totalBoxCost = distanceCost + additionalCost;
+
         boxShippingCosts.push({
           boxName: box.boxName,
-          shippingCost: totalBoxCost,
+          boxId: box.boxId,
+          boxPrice: box.price,
+          shippingCost: totalBoxCost, // Set total shipping cost for this box
         });
+        console.log(boxShippingCosts);
 
         calculatedTotalFee += totalBoxCost;
       });
 
-      setBoxOpShippingCost(boxShippingCosts);
-      setTotalFee(calculatedTotalFee);
+      setBoxOpShippingCost(boxShippingCosts); // Update state
+
 
       calculateTotalShippingCost(calculatedTotalFee, packingCost);
 
@@ -430,7 +430,7 @@ const CreateOrderPage = () => {
       shippingType === "Japan"
         ? boxShippingCost + packingCost
         : boxShippingCost; // Adjust total cost based on shipping type
-    setTotalShippingCost(totalCost);
+    setTotalFee(totalCost);
   };
 
   // Upload certificate images to Firebase
@@ -500,11 +500,11 @@ const CreateOrderPage = () => {
 
   // Submit Order
   const handleSubmitOrder = async () => {
-    setIsCreateOrderLoading(true); // Start loading
+    setIsCreateOrderLoading(true);
 
     try {
-      // Prepare order payload
       const orderPayload = {
+        userId,
         senderName,
         senderAddress,
         receiverName,
@@ -525,7 +525,22 @@ const CreateOrderPage = () => {
       }
 
       for (const boxOption of boxOptions) {
-        const totalShippingFee = boxOption.totalShippingFee;
+        // Find corresponding total shipping cost for the current box option
+        const matchingBoxCost = boxOpShippingCost.find(
+          (boxCost) => boxCost.boxName === boxOption.boxName
+        );
+
+        if (!matchingBoxCost) {
+          toast.error(`Shipping cost not found for box: ${boxOption.boxName}`);
+          setIsCreateOrderLoading(false);
+          return;
+        }
+
+        const totalBoxShippingFee = 
+        shippingType === "Japan"
+        ? matchingBoxCost.shippingCost + matchingBoxCost.boxPrice
+        : matchingBoxCost.shippingCost
+        
         const boxOptionPayload = {
           boxes: [
             {
@@ -550,18 +565,29 @@ const CreateOrderPage = () => {
           const createdBoxOptionId = boxOptionResponse.data.data[0].id;
 
           const orderDetailPayload = {
-            totalShippingFee,
+            totalShippingFee: totalBoxShippingFee, // Set total shipping fee
             boxOptionId: createdBoxOptionId,
             orderId,
             distanceId,
             isComplete: "0",
           };
 
-          await orderDetailServices.createOrderDetail(orderDetailPayload);
+          console.log("Order Detail Payload:", orderDetailPayload);
 
-          toast.success(
-            `Đơn hàng đã được tạo thành công! Tổng phí: ${totalFee.toLocaleString()} VND`
-          );
+          const orderDetailResponse =
+            await orderDetailServices.createOrderDetail(orderDetailPayload);
+
+          if (
+            orderDetailResponse?.status === 200 &&
+            orderDetailResponse.data?.success
+          ) {
+            toast.success(
+              `Order detail created successfully! Shipping Fee: ${totalBoxShippingFee.toLocaleString()} VND`
+            );
+          } else {
+            toast.error("Failed to create order detail.");
+            break;
+          }
         } else {
           toast.error("Failed to create box option.");
           break;
@@ -571,8 +597,9 @@ const CreateOrderPage = () => {
       toast.error("Lỗi khi tạo đơn hàng.");
     }
 
-    setIsCreateOrderLoading(false); // Stop loading
+    setIsCreateOrderLoading(false);
   };
+
   return (
     <Box py={4} className="container">
       <Typography

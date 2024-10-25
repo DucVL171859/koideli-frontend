@@ -959,7 +959,7 @@ const CreateOrderPage = () => {
                                 <Box display="flex" alignItems="center" mb={1}>
                                   <LocalShippingIcon sx={{ color: boxColor }} />
                                   <Typography variant="body1" ml={1}>
-                                    Phí Nước Ngoài:{" "}
+                                    Phí Từ Nhật Bản:{" "}
                                     {shippingType === "Vietnam" ? (
                                       "0 đ"
                                     ) : (

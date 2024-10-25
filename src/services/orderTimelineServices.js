@@ -18,7 +18,7 @@ const updateOrderTimeline = async (id) => {
 }
 
 const deleteOrderTimeline = async (id) => {
-    return await axios.delete(`/api/v1/OrderTimeline/${id}`, { headers: authHeader() });
+    return await axios.delete(`/api/v1/OrderTimeline?id=${id}`, { headers: authHeader() });
 }
 
 export default {

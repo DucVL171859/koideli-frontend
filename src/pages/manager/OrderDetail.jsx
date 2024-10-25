@@ -17,6 +17,7 @@ import orderServices from 'services/orderServices';
 import koiFishServices from 'services/koiFishServices';
 import orderDetailServices from 'services/orderDetailServices';
 import boxOptionServices from 'services/boxOptionServices';
+import distanceServices from 'services/distanceServices';
 
 const OrderDetail = () => {
     const { slug } = useParams();
@@ -26,6 +27,7 @@ const OrderDetail = () => {
     const [currentOrderDetail, setCurrentOrderDetail] = useState([]);
     const [boxOption, setBoxOption] = useState([]);
     const [koiFist, setKoiFist] = useState([]);
+    const [distance, setDistance] = useState({});
 
     const statusMessages = {
         Pending: 'Đơn hàng mới',
@@ -66,6 +68,8 @@ const OrderDetail = () => {
                 matchedOrderDetail.forEach(detail => {
                     getBoxOption(detail.boxOptionId);
                 });
+
+                getDistance(matchedOrderDetail[0].distanceId);
             }
         };
 
@@ -94,6 +98,13 @@ const OrderDetail = () => {
         getOrder();
     }, [slug]);
 
+    const getDistance = async (distanceId) => {
+        let resOfDistance = await distanceServices.getDistanceById(distanceId);
+        if (resOfDistance) {
+            setDistance(resOfDistance.data.data);
+        }
+    }
+
     const totalQuantity = boxOption.reduce((total, option) => {
         const fishQuantities = option.fishes.reduce((sum, fish) => sum + fish.quantity, 0);
         return total + fishQuantities;
@@ -107,10 +118,17 @@ const OrderDetail = () => {
 
             <Box sx={{ backgroundColor: statusColors[order.isShipping], padding: 2, borderRadius: 1, marginBottom: 2 }}>
                 <Typography variant="h6">Thông tin gửi nhận</Typography>
-                <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'start' }}>
-                    <Typography variant="subtitle1">Người nhận: {order.receiverName} / {order.receiverPhone}</Typography>
-                    <Typography variant="subtitle1">Địa chỉ nhận: {order.receiverAddress}</Typography>
-                </Paper>
+                <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+                    <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'start' }}>
+                        <Typography variant="subtitle1">Người gửi: {order.senderName}</Typography>
+                        <Typography variant="subtitle1">Địa chỉ gửi: {order.senderAddress}</Typography>
+                    </Paper>
+                    <Box sx={{ width: '2px', height: '100%', backgroundColor: 'grey.400', margin: '0 16px' }} />
+                    <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'start' }}>
+                        <Typography variant="subtitle1">Người nhận: {order.receiverName} / {order.receiverPhone}</Typography>
+                        <Typography variant="subtitle1">Địa chỉ nhận: {order.receiverAddress}</Typography>
+                    </Paper>
+                </Box>
             </Box>
 
             <Divider sx={{ marginBottom: 2 }} />
@@ -155,14 +173,32 @@ const OrderDetail = () => {
                         <TableHead>
                             <TableRow>
                                 <TableCell>Loại Hộp</TableCell>
+                                <TableCell align="right">Chi phí từ Nhật</TableCell>
+                                <TableCell align="right">Chi phí trong nước</TableCell>
                                 <TableCell align="right">Loại Cá Được Đóng Gói</TableCell>
                                 <TableCell align="right">Tổng thể tích cá/hộp</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {boxOption.map((boxOption) => (
+                            {boxOption && boxOption.map((boxOption) => (
                                 <TableRow key={boxOption.boxOptionId}>
                                     <TableCell>{boxOption.boxName}</TableCell>
+                                    <TableCell align="right">
+                                        {boxOption.boxName && boxOption.boxName.includes('JP') ? `${boxOption.price.toLocaleString()} VND` : '0 VND'}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {(() => {
+                                            let newPrice = 0;
+                                            if (boxOption.boxName) {
+                                                if (boxOption.boxName.includes('Medium')) {
+                                                    newPrice = distance.price + 150000;
+                                                } else if (boxOption.boxName.includes('Large')) {
+                                                    newPrice = distance.price + 350000;
+                                                }
+                                            }
+                                            return newPrice.toLocaleString();
+                                        })()} VND
+                                    </TableCell>
                                     <TableCell align="right">
                                         {boxOption.fishes.map((fish) => (
                                             <Box key={fish.fishId}>
@@ -193,29 +229,10 @@ const OrderDetail = () => {
                         </TableHead>
                         <TableBody>
                             <TableRow>
-                                <TableCell>Chi phí đóng gói từ Nhật</TableCell>
-                                <TableCell align="right">
-                                    {boxOption.reduce((total, box) => total + box.price, 0).toLocaleString()} VND
-                                </TableCell>
-                                <TableCell align="right">{boxOption.length} hộp</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Chi phí đóng gói trong nước</TableCell>
-                                <TableCell align="right">0 VND</TableCell>
-                                <TableCell align="right"></TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Chi phí vận chuyển trong nước</TableCell>
-                                <TableCell align="right">
-                                    {boxOption.reduce((total, box) => total + box.price, 0).toLocaleString()} VND
-                                </TableCell>
-                                <TableCell align="right">{order.receiverAddress}</TableCell>
-                            </TableRow>
-                            <TableRow>
                                 <TableCell><strong>Tổng chi phí</strong></TableCell>
                                 <TableCell align="right">
                                     <strong>
-                                        {boxOption.reduce((total, box) => total + box.price, 0).toLocaleString()} VND
+                                        {order.totalFee && order.totalFee.toLocaleString()} VND
                                     </strong>
                                 </TableCell>
                                 <TableCell align="right">Đã bao gồm thuế VAT</TableCell>

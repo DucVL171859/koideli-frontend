@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
     Typography,
-    Checkbox,
     FormControl,
     InputLabel,
     Select,
@@ -15,6 +14,13 @@ import {
     Paper,
     Box,
     Button,
+    TextField,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Radio,
+    Grid,
 } from "@mui/material";
 import MainCard from "components/MainCard";
 import orderServices from "services/orderServices";
@@ -23,7 +29,9 @@ import vehicleServices from "services/vehicleServices";
 import boxOptionServices from "services/boxOptionServices";
 import timelineDeliveryServices from "services/timelineDeliveryServices";
 import branchServices from "services/branchServices";
-import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import deliveryServices from "services/deliveryServices";
+import ExistingTimelines from "./ExistingTimeline";
 
 const sampleBranch = [
     { id: 1, name: 'Kho Cần Thơ', forward: 1, backward: null },
@@ -47,8 +55,8 @@ const formatDateTime = (dateString) => {
 };
 
 const Timeline = () => {
-    const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
+    const [currentOrder, setCurrentOrder] = useState({});
     const [orderDetailsMap, setOrderDetailsMap] = useState({});
     const [boxOptions, setBoxOptions] = useState([]);
 
@@ -57,86 +65,35 @@ const Timeline = () => {
     const [branchPointAPI, setBranchPointAPI] = useState([]);
     const [selectedStartPoint, setSelectedStartPoint] = useState(null);
     const [selectedEndPoint, setSelectedEndPoint] = useState(null);
-    const [selectedBranch, setSelectedBranch] = useState("");
 
     const [vehicles, setVehicles] = useState([]);
     const [availableVehicles, setAvailableVehicles] = useState([]);
     const [timelineDelivery, setTimelineDelivery] = useState([]);
-    const [filteredTimelines, setFilteredTimelines] = useState([]);
-    const [existingTimelines, setExistingTimelines] = useState([]);
+
+    const [selectedVehicle, setSelectedVehicle] = useState("");
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    const [totalStartTime, setTotalStartTime] = useState("");
 
     const [error, setError] = useState("");
 
     useEffect(() => {
-        const getOrders = async () => {
-            let resOfOrder = await orderServices.getOrder();
-            if (resOfOrder) {
-                let packedOrders = resOfOrder.data.data.filter((order) => order.isShipping === 'Packed');
-                setOrders(packedOrders);
-                let detailsPromises = packedOrders.map(order => getOrderDetails(order.id));
-                await Promise.all(detailsPromises);
-            }
-        };
-
-        const getOrderDetails = async (orderId) => {
-            let resOfOrderDetail = await orderDetailServices.getOrderDetail();
-            if (resOfOrderDetail) {
-                let orderDetailData = resOfOrderDetail.data.data;
-                let matchedOrderDetail = orderDetailData.filter(detail => detail.orderId === orderId);
-                setOrderDetailsMap(prevDetails => ({
-                    ...prevDetails,
-                    [orderId]: matchedOrderDetail
-                }));
-
-                await Promise.all(matchedOrderDetail.map(async (orderDetail) => {
-                    if (orderDetail.boxOptionId) {
-                        await getBoxOptions(orderDetail.boxOptionId);
-                    }
-                }));
-            }
-        };
-
-        const getBoxOptions = async (boxOptionId) => {
-            let resOfBoxOptions = await boxOptionServices.getBoxOption();
-            if (resOfBoxOptions) {
-                let boxOptionsData = resOfBoxOptions.data.data;
-                let matchedBoxOptions = boxOptionsData.filter(boxOption => boxOption.boxOptionId === boxOptionId);
-                setBoxOptions(prevBoxOptions => [
-                    ...prevBoxOptions,
-                    ...matchedBoxOptions
-                ]);
-            }
-        };
-
-        const getVehicles = async () => {
-            let resOfVehicle = await vehicleServices.getVehicle();
-            if (resOfVehicle) {
-                setVehicles(resOfVehicle.data.data);
-            }
-        };
-
-        const getBranches = async () => {
-            let resOfBranch = await branchServices.getBranch();
-            if (resOfBranch) {
-                setBranchesAPI(resOfBranch.data.data);
-            }
-        }
-
-        const getTimelineDelivery = async () => {
-            let resOfTimelineDelivery = await timelineDeliveryServices.getTimelineDelivery();
-            if (resOfTimelineDelivery) {
-                setTimelineDelivery(resOfTimelineDelivery.data.data);
-                setExistingTimelines(resOfTimelineDelivery.data.data);
-            }
+        const fetchData = async () => {
+            await getOrders();
+            await getVehicles();
+            await getBranches();
+            await getTimelineDelivery();
+            await getBoxOptions();
         }
 
         setBranches(sampleBranch);
-        getOrders();
-        getVehicles();
-        getBranches();
-        getTimelineDelivery();
-        getBoxOptions();
+        fetchData();
     }, []);
+
+    useEffect(() => {
+        filterAvailableVehicles(vehicles);
+    }, [timelineDelivery, vehicles]);
 
     useEffect(() => {
         if (selectedStartPoint && selectedEndPoint && selectedStartPoint === selectedEndPoint) {
@@ -145,6 +102,76 @@ const Timeline = () => {
             setError("");
         }
     }, [selectedStartPoint, selectedEndPoint]);
+
+    const getOrders = async () => {
+        let resOfOrder = await orderServices.getOrder();
+        if (resOfOrder) {
+            let packedOrders = resOfOrder.data.data.filter((order) => order.isShipping === 'Packed');
+            setOrders(packedOrders);
+            let detailsPromises = packedOrders.map(order => getOrderDetails(order.id));
+            await Promise.all(detailsPromises);
+        }
+    };
+
+    const getOrderDetails = async (orderId) => {
+        let resOfOrderDetail = await orderDetailServices.getOrderDetail();
+        if (resOfOrderDetail) {
+            let orderDetailData = resOfOrderDetail.data.data;
+            let matchedOrderDetail = orderDetailData.filter(detail => detail.orderId === orderId);
+            setOrderDetailsMap(prevDetails => ({
+                ...prevDetails,
+                [orderId]: matchedOrderDetail
+            }));
+
+            await Promise.all(matchedOrderDetail.map(async (orderDetail) => {
+                if (orderDetail.boxOptionId) {
+                    await getBoxOptions(orderDetail.boxOptionId);
+                }
+            }));
+        }
+    };
+
+    const getBoxOptions = async (boxOptionId) => {
+        let resOfBoxOptions = await boxOptionServices.getBoxOption();
+        if (resOfBoxOptions) {
+            let boxOptionsData = resOfBoxOptions.data.data;
+            let matchedBoxOptions = boxOptionsData.filter(boxOption => boxOption.boxOptionId === boxOptionId);
+            setBoxOptions(prevBoxOptions => [
+                ...prevBoxOptions,
+                ...matchedBoxOptions
+            ]);
+        }
+    };
+
+    const getVehicles = async () => {
+        let resOfVehicle = await vehicleServices.getVehicle();
+        if (resOfVehicle) {
+            setVehicles(resOfVehicle.data.data);
+            filterAvailableVehicles(resOfVehicle.data.data);
+        }
+    };
+
+    const filterAvailableVehicles = (fetchedVehicles) => {
+        if (timelineDelivery) {
+            let usedVehicleIds = new Set(timelineDelivery.map(timeline => timeline.vehicleId));
+            let filteredVehicles = fetchedVehicles.filter(vehicle => !usedVehicleIds.has(vehicle.id));
+            setAvailableVehicles(filteredVehicles);
+        }
+    };
+
+    const getBranches = async () => {
+        let resOfBranch = await branchServices.getBranch();
+        if (resOfBranch) {
+            setBranchesAPI(resOfBranch.data.data);
+        }
+    }
+
+    const getTimelineDelivery = async () => {
+        let resOfTimelineDelivery = await timelineDeliveryServices.getTimelineDeliveryEnable();
+        if (resOfTimelineDelivery) {
+            setTimelineDelivery(resOfTimelineDelivery.data.data);
+        }
+    }
 
     const handleStartPointChange = (event) => {
         let selStartPoint = sampleBranch.find(branch => branch.name === event.target.value);
@@ -156,113 +183,209 @@ const Timeline = () => {
         setSelectedEndPoint(selEndPoint);
     };
 
-    const handleBranchChange = (event) => {
-        const selectedBranchId = event.target.value;
-        setSelectedBranch(selectedBranchId);
+    const getBranchGoneThrow = () => {
+        let startIndex = sampleBranch.findIndex(branch => branch.id === selectedStartPoint.id);
+        let endIndex = sampleBranch.findIndex(branch => branch.id === selectedEndPoint.id);
 
-        const filteredTimelines = existingTimelines.filter(timeline => timeline.branchId === selectedBranchId);
-        setFilteredTimelines(filteredTimelines);
-    };
+        let middleBranches = [];
+        let allBranches = [];
+        let startBranch = {};
+
+        if (startIndex < endIndex) {
+            startBranch = branchesAPI.find(branch => branch.id === selectedStartPoint.forward);
+            middleBranches = sampleBranch.slice(startIndex + 1, endIndex);
+            let fetchedRestBranches = middleBranches.map(branch => {
+                return branchesAPI.find(b => b.id === branch.forward);
+            }).filter(Boolean);
+            allBranches = [startBranch, ...fetchedRestBranches].filter(Boolean).sort((a, b) => a.id - b.id);
+            setBranchPointAPI(allBranches);
+            console.log(allBranches)
+        } else {
+            startBranch = branchesAPI.find(branch => branch.id === selectedStartPoint.backward);
+            middleBranches = sampleBranch.slice(endIndex + 1, startIndex);
+            let fetchedMiddleBranches = middleBranches.map(branch => {
+                return branchesAPI.find(b => b.id === branch.backward);
+            }).filter(Boolean);
+            allBranches = [startBranch, ...fetchedMiddleBranches].filter(Boolean).sort((a, b) => b.id - a.id);
+            setBranchPointAPI(allBranches);
+        }
+
+        return allBranches;
+    }
 
     const handleCreateTrip = async () => {
-        if (selectedStartPoint && selectedEndPoint && selectedStartPoint !== selectedEndPoint) {
-            let startIndex = sampleBranch.findIndex(branch => branch.id === selectedStartPoint.id);
-            let endIndex = sampleBranch.findIndex(branch => branch.id === selectedEndPoint.id);
-
-            let middleBranches = [];
-            let allBranches = [];
-            let startBranch = {};
-
-            if (startIndex < endIndex) {
-                startBranch = branchesAPI.find(branch => branch.id === selectedStartPoint.forward);
-                middleBranches = sampleBranch.slice(startIndex + 1, endIndex);
-                let fetchedRestBranches = middleBranches.map(branch => {
-                    return branchesAPI.find(b => b.id === branch.forward)
-                }).filter(Boolean);
-                allBranches = [startBranch, ...fetchedRestBranches].filter(Boolean).sort((a, b) => a.id - b.id);
-                setBranchPointAPI(allBranches);
+        let allBranchGoneThrow = getBranchGoneThrow();
+        let de_CreateDetailTimelineDTOs = allBranchGoneThrow.map(branch => ({
+            branchId: branch.id,
+        }));
+        const timelineInfo = {
+            vehicleId: selectedVehicle,
+            totalStartTime: totalStartTime,
+            de_CreateDetailTimelineDTOs: de_CreateDetailTimelineDTOs
+        };
+        try {
+            let resOfCreateTimeline = await deliveryServices.createTimeline(timelineInfo);
+            if (resOfCreateTimeline.data.data) {
+                setConfirmDialogOpen(false);
+                setSelectedStartPoint(null);
+                setSelectedEndPoint(null);
+                setTotalStartTime("");
+                setSelectedVehicle("");
+                toast.success('Tạo lịch trình thành công');
             } else {
-                startBranch = branchesAPI.find(branch => branch.id === selectedStartPoint.backward);
-                middleBranches = sampleBranch.slice(endIndex + 1, startIndex);
-                let fetchedMiddleBranches = middleBranches.map(branch => {
-                    return branchesAPI.find(b => b.id === branch.backward)
-                }).filter(Boolean);
-                allBranches = [startBranch, ...fetchedMiddleBranches].filter(Boolean).sort((a, b) => b.id - a.id);
-                setBranchPointAPI(allBranches);
+                toast.error('Tạo lịch trình thất bại');
             }
-
-            let usedVehicleIds = new Set(timelineDelivery.map(timeline => timeline.vehicleId));
-            let filteredVehicles = vehicles.filter(vehicle => !usedVehicleIds.has(vehicle.id));
-            setAvailableVehicles(filteredVehicles);
+        } catch (error) {
+            console.log(error)
         }
     };
 
-    const handleSelectVehicle = (vehicleId) => {
-        navigate(`/manager/create-timeline/vehicle/${vehicleId}`, { state: { branchPointAPI } });
+    const handleSelectVehicle = (event) => {
+        setSelectedVehicle(Number(event.target.value));
+    };
+
+    const handleOpenConfirmDialog = () => {
+        if (
+            selectedStartPoint &&
+            selectedEndPoint &&
+            selectedStartPoint !== selectedEndPoint &&
+            totalStartTime &&
+            selectedVehicle
+        ) {
+            setConfirmDialogOpen(true);
+        } else {
+            toast.error('Vui lòng chọn đủ địa điểm, thời gian và xe để tạo chuyến');
+        }
+    };
+
+    const handleDateChange = (event) => {
+        const dateValue = event.target.value;
+        const dateTime = new Date(dateValue).toISOString();
+        setTotalStartTime(dateTime);
+    };
+
+    const handleDialogOpen = (order) => {
+        setCurrentOrder(order);
+        setDialogOpen(true);
+    };
+
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+        setCurrentOrder(null);
     };
 
     return (
         <>
-            <MainCard title="Đơn hàng chờ sắp xếp vận chuyển">
+            <MainCard>
+                <Typography variant="h5" fontWeight={600}>Đơn hàng chờ sắp xếp vận chuyển</Typography>
                 <Box display="flex" flexWrap="wrap" justifyContent="start">
                     {orders && orders.map((order) => (
-                        <Box key={order.id} sx={{ width: '30%', margin: '1%', border: '1px solid #ccc', borderRadius: '4px', padding: '16px' }}>
+                        <Box key={order.id} sx={{ width: '25%', margin: '1%', border: '1px solid #ccc', borderRadius: '4px', padding: '16px' }}>
                             <Typography variant="h6">ID: {order.id}</Typography>
                             <Typography>Người nhận: {order.receiverName}</Typography>
                             <Typography>Địa chỉ nhận: {order.receiverAddress}</Typography>
-
-                            <Box sx={{ marginTop: 2 }}>
-                                {orderDetailsMap[order.id]?.map(orderDetail => {
-                                    const matchedBoxOptions = boxOptions.filter(boxOption => boxOption.boxOptionId === orderDetail.boxOptionId);
-
-                                    return matchedBoxOptions.map(boxOption => (
-                                        <Box key={boxOption.boxOptionId} sx={{ padding: '8px', border: '1px solid #e0e0e0', margin: '4px 0' }}>
-                                            <Typography>Mã hộp: {boxOption.boxOptionId}</Typography>
-                                            <Typography>Tổng số cá: {boxOption.totalFish}</Typography>
-                                            <Typography>Sức chứa tối đa: {boxOption.maxVolume} lít</Typography>
-                                        </Box>
-                                    ));
-                                }) || <Typography>Không có chi tiết đơn hàng.</Typography>}
-                            </Box>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => handleDialogOpen(order)}
+                                sx={{ mt: 2 }}
+                            >
+                                Xem Chi Tiết
+                            </Button>
                         </Box>
                     ))}
                 </Box>
             </MainCard>
 
-            <MainCard title="Lịch trình mới" sx={{ mt: 2 }}>
-                <Box display="flex" flexDirection="column" alignItems="flex-start">
-                    <Box sx={{ display: 'inline-block', width: '40%', marginRight: '4%' }}>
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel id="start-point-select-label">Chọn điểm bắt đầu</InputLabel>
-                            <Select
-                                labelId="start-point-select-label"
-                                value={selectedStartPoint ? selectedStartPoint.name : ""}
-                                onChange={handleStartPointChange}
-                            >
-                                {branches.map((branch) => (
-                                    <MenuItem key={branch.id} value={branch.name}>
-                                        {branch.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Box>
+            <Dialog open={dialogOpen} onClose={handleDialogClose}
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    style: {
+                        width: '1200px',
+                        maxWidth: '100%',
+                        margin: 'auto',
+                    },
+                }}
+            >
+                <DialogTitle>Chi tiết đơn hàng</DialogTitle>
+                <DialogContent>
+                    {currentOrder && (
+                        <Box sx={{ padding: '16px', borderRadius: '4px' }}>
+                            <Typography variant="h6">ID: {currentOrder.id}</Typography>
+                            <Typography>Người nhận: {currentOrder.receiverName}</Typography>
+                            <Typography>Địa chỉ nhận: {currentOrder.receiverAddress}</Typography>
+                            <Grid container spacing={2} sx={{ marginTop: 2 }}>
+                                {orderDetailsMap[currentOrder.id]?.map(orderDetail => {
+                                    const matchedBoxOptions = boxOptions.filter(boxOption => boxOption.boxOptionId === orderDetail.boxOptionId);
 
-                    <Box sx={{ display: 'inline-block', width: '40%' }}>
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel id="end-point-select-label">Chọn điểm kết thúc</InputLabel>
-                            <Select
-                                labelId="end-point-select-label"
-                                value={selectedEndPoint ? selectedEndPoint.name : ""}
-                                onChange={handleEndPointChange}
-                            >
-                                {branches.map((branch) => (
-                                    <MenuItem key={branch.id} value={branch.name}>
-                                        {branch.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                                    return matchedBoxOptions.map(boxOption => (
+                                        <Grid item xs={3} key={boxOption.boxOptionId}>
+                                            <Box sx={{ padding: '8px', border: '1px solid #000', margin: '4px 0', bgcolor: '#a38d69' }}>
+                                                <Typography sx={{ color: '#fff' }}>Loại hộp: {boxOption.boxName}</Typography>
+                                                <Typography sx={{ color: '#fff' }}>Mã hộp: {boxOption.boxOptionId}</Typography>
+                                                <Typography sx={{ color: '#fff' }}>Tổng số cá: {boxOption.totalFish}</Typography>
+                                                <Typography sx={{ color: '#fff' }}>Sức chứa tối đa: {boxOption.maxVolume} lít</Typography>
+                                            </Box>
+                                        </Grid>
+                                    ));
+                                }) || <Typography>Không có chi tiết đơn hàng.</Typography>}
+                            </Grid>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDialogClose} color="primary">Đóng</Button>
+                </DialogActions>
+            </Dialog>
+
+            <MainCard sx={{ mt: 2 }}>
+                <Typography variant="h5" fontWeight={600}>Lịch trình mới</Typography>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                    <Box sx={{ width: '45%' }}>
+                        <Box display="flex" flexDirection="column" alignItems="flex-start">
+                            <Box sx={{ width: '100%', marginBottom: 2 }}>
+                                <Typography>Chọn địa điểm: </Typography>
+                                <FormControl fullWidth margin="normal">
+                                    <InputLabel id="start-point-select-label">Chọn điểm bắt đầu</InputLabel>
+                                    <Select
+                                        labelId="start-point-select-label"
+                                        value={selectedStartPoint ? selectedStartPoint.name : ""}
+                                        onChange={handleStartPointChange}
+                                    >
+                                        {branches.map((branch) => (
+                                            <MenuItem key={branch.id} value={branch.name}>
+                                                {branch.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+                            <Box sx={{ width: '100%' }}>
+                                <FormControl fullWidth margin="normal">
+                                    <InputLabel id="end-point-select-label">Chọn điểm kết thúc</InputLabel>
+                                    <Select
+                                        labelId="end-point-select-label"
+                                        value={selectedEndPoint ? selectedEndPoint.name : ""}
+                                        onChange={handleEndPointChange}
+                                    >
+                                        {branches.map((branch) => (
+                                            <MenuItem key={branch.id} value={branch.name}>
+                                                {branch.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+                        </Box>
+                    </Box>
+                    <Box sx={{ width: '45%', marginLeft: '4%' }}>
+                        <Typography>Chọn thời gian khởi hành: </Typography>
+                        <TextField
+                            type="datetime-local"
+                            onChange={handleDateChange}
+                            sx={{ marginTop: 2, width: '100%' }}
+                        />
                     </Box>
                 </Box>
 
@@ -272,76 +395,72 @@ const Timeline = () => {
                     </Typography>
                 )}
 
-                <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleCreateTrip}>
-                    Tạo chuyến
-                </Button>
-
-                <TableContainer component={Paper} sx={{ mt: 2 }}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Xe có sẵn</TableCell>
-                                <TableCell>Sức chứa tối đa</TableCell>
-                                <TableCell></TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {availableVehicles.map(vehicle => (
-                                <TableRow key={vehicle.id}>
-                                    <TableCell>{vehicle.name}</TableCell>
-                                    <TableCell>{vehicle.vehicleVolume} lít</TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={() => handleSelectVehicle(vehicle.id)}
-                                        >
-                                            Chọn xe
-                                        </Button>
-                                    </TableCell>
+                <Box sx={{ mt: 2 }}>
+                    <Typography variant="h6">Chọn xe:</Typography>
+                    <TableContainer component={Paper} sx={{ mt: 2 }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell></TableCell>
+                                    <TableCell>Tên xe</TableCell>
+                                    <TableCell>Sức chứa tối đa</TableCell>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {availableVehicles && availableVehicles.map(vehicle => (
+                                    <TableRow key={vehicle.id}>
+                                        <TableCell>
+                                            <Radio
+                                                value={vehicle.id}
+                                                checked={selectedVehicle === vehicle.id}
+                                                onChange={handleSelectVehicle}
+                                            />
+                                        </TableCell>
+                                        <TableCell>{vehicle.name}</TableCell>
+                                        <TableCell>{vehicle.vehicleVolume} lít</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Box>
+
+                <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    mt={2}
+                >
+                    <Button variant="contained" color="success" onClick={handleOpenConfirmDialog}>
+                        Tạo chuyến
+                    </Button>
+                </Box>
             </MainCard >
 
-            <MainCard title="Lịch trình đã có" sx={{ mt: 2 }}>
-                <FormControl fullWidth margin="normal">
-                    <InputLabel id="branch-select-label">Chọn Chi Nhánh</InputLabel>
-                    <Select
-                        labelId="branch-select-label"
-                        value={selectedBranch}
-                        onChange={handleBranchChange}
-                    >
-                        {branchesAPI.map((branch) => (
-                            <MenuItem key={branch.id} value={branch.id}>
-                                {branch.name}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
+            <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+                <DialogTitle>Xác nhận tạo chuyến</DialogTitle>
+                <DialogContent>
+                    <Typography>Bạn chắc chắn muốn tạo chuyến:</Typography>
+                    <Typography>- Xe: {vehicles.find(vehicle => vehicle.id === selectedVehicle)
+                        ? vehicles.find(vehicle => vehicle.id === selectedVehicle).name
+                        : null}
+                    </Typography>
+                    <Typography>- Thời gian khởi hành: {formatDateTime(totalStartTime)}</Typography>
+                    <Typography>- Địa điểm: {selectedStartPoint?.name} - {selectedEndPoint?.name}</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+                        Hủy
+                    </Button>
+                    <Button onClick={handleCreateTrip} color="primary">
+                        Xác nhận
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
-                <TableContainer component={Paper} sx={{ mt: 2 }}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Xe</TableCell>
-                                <TableCell>Dự kiến bắt đầu - kết thúc</TableCell>
-                                <TableCell>Sức chứa tối đa</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filteredTimelines && filteredTimelines.map((timeline) => (
-                                <TableRow key={timeline.id}>
-                                    <TableCell>{vehicles[timeline.vehicleId - 1]?.name}</TableCell>
-                                    <TableCell>{formatDateTime(timeline.startDay)} - {formatDateTime(timeline.endDay)}</TableCell>
-                                    <TableCell>{vehicles[timeline.vehicleId - 1]?.vehicleVolume} lít</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+            <MainCard sx={{ mt: 2 }}>
+                <Typography variant="h5" fontWeight={600}>Lịch trình đã có</Typography>
+                <ExistingTimelines />
             </MainCard>
         </>
     );

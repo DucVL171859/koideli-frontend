@@ -32,10 +32,7 @@ const OrderChecking = () => {
     const [currentOrderDetail, setCurrentOrderDetail] = useState([]);
     const [boxOption, setBoxOption] = useState([]);
     const [koiFist, setKoiFist] = useState([]);
-
     const [distance, setDistance] = useState({});
-    const [domesticShippingCost, setDomesticShippingCost] = useState(0);
-
 
     const [openDialog, setOpenDialog] = useState(false);
     const [dialogAction, setDialogAction] = useState('');
@@ -78,8 +75,9 @@ const OrderChecking = () => {
                 setCurrentOrderDetail(matchedOrderDetail);
                 matchedOrderDetail.forEach(detail => {
                     getBoxOption(detail.boxOptionId);
-                    getDistance(detail.distanceId);
                 });
+
+                getDistance(matchedOrderDetail[0].distanceId);
             }
         };
 
@@ -105,30 +103,20 @@ const OrderChecking = () => {
             }
         };
 
-        const getDistance = async (distanceId) => {
-            let resOfDistance = await distanceServices.getDistanceById(distanceId);
-            if (resOfDistance) {
-                setDistance(resOfDistance.data.data);
-                let shippingFee = resOfDistance.data.data.price;
-                let totalDomesticShipping = 0;
-                totalDomesticShipping += shippingFee;
-                setDomesticShippingCost(totalDomesticShipping)
-            }
-        }
-
         getOrder();
     }, [slug]);
+
+    const getDistance = async (distanceId) => {
+        let resOfDistance = await distanceServices.getDistanceById(distanceId);
+        if (resOfDistance) {
+            setDistance(resOfDistance.data.data);
+        }
+    }
 
     const totalQuantity = boxOption.reduce((total, option) => {
         const fishQuantities = option.fishes.reduce((sum, fish) => sum + fish.quantity, 0);
         return total + fishQuantities;
     }, 0);
-
-    const internationalShippingCost = boxOption.some(box => typeof box.name === 'string' && box.name.includes('-JP'))
-        ? boxOption.reduce((total, box) => total + box.price, 0)
-        : 0;
-
-    const totalShippingCost = domesticShippingCost + internationalShippingCost;
 
     const handleOpenDialog = (action) => {
         setDialogAction(action);
@@ -161,10 +149,17 @@ const OrderChecking = () => {
 
             <Box sx={{ backgroundColor: statusColors[order.isShipping], padding: 2, borderRadius: 1, marginBottom: 2 }}>
                 <Typography variant="h6">Thông tin gửi nhận</Typography>
-                <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'start' }}>
-                    <Typography variant="subtitle1">Người nhận: {order.receiverName} / {order.receiverPhone}</Typography>
-                    <Typography variant="subtitle1">Địa chỉ nhận: {order.receiverAddress}</Typography>
-                </Paper>
+                <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+                    <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'start' }}>
+                        <Typography variant="subtitle1">Người gửi: {order.senderName}</Typography>
+                        <Typography variant="subtitle1">Địa chỉ gửi: {order.senderAddress}</Typography>
+                    </Paper>
+                    <Box sx={{ width: '2px', height: '100%', backgroundColor: 'grey.400', margin: '0 16px' }} />
+                    <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'start' }}>
+                        <Typography variant="subtitle1">Người nhận: {order.receiverName} / {order.receiverPhone}</Typography>
+                        <Typography variant="subtitle1">Địa chỉ nhận: {order.receiverAddress}</Typography>
+                    </Paper>
+                </Box>
             </Box>
 
             <Divider sx={{ marginBottom: 2 }} />
@@ -209,14 +204,32 @@ const OrderChecking = () => {
                         <TableHead>
                             <TableRow>
                                 <TableCell>Loại Hộp</TableCell>
+                                <TableCell align="right">Chi phí từ Nhật</TableCell>
+                                <TableCell align="right">Chi phí trong nước</TableCell>
                                 <TableCell align="right">Loại Cá Được Đóng Gói</TableCell>
                                 <TableCell align="right">Tổng thể tích cá/hộp</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {boxOption.map((boxOption) => (
+                            {boxOption && boxOption.map((boxOption) => (
                                 <TableRow key={boxOption.boxOptionId}>
                                     <TableCell>{boxOption.boxName}</TableCell>
+                                    <TableCell align="right">
+                                        {boxOption.boxName && boxOption.boxName.includes('JP') ? `${boxOption.price.toLocaleString()} VND` : '0 VND'}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {(() => {
+                                            let newPrice = 0;
+                                            if (boxOption.boxName) {
+                                                if (boxOption.boxName.includes('Medium')) {
+                                                    newPrice = distance.price + 150000;
+                                                } else if (boxOption.boxName.includes('Large')) {
+                                                    newPrice = distance.price + 350000;
+                                                }
+                                            }
+                                            return newPrice.toLocaleString();
+                                        })()} VND
+                                    </TableCell>
                                     <TableCell align="right">
                                         {boxOption.fishes.map((fish) => (
                                             <Box key={fish.fishId}>
@@ -247,26 +260,10 @@ const OrderChecking = () => {
                         </TableHead>
                         <TableBody>
                             <TableRow>
-                                <TableCell>Chi phí vận chuyển từ Nhật</TableCell>
-                                <TableCell align="right">
-                                    {boxOption.some(box => typeof box.name === 'string' && box.name.includes('-JP'))
-                                        ? boxOption.reduce((total, box) => total + box.price, 0).toLocaleString() + ' VND'
-                                        : '0 VND'}
-                                </TableCell>
-                                <TableCell align="right">{boxOption.length} hộp</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Chi phí vận chuyển trong nước</TableCell>
-                                <TableCell align="right">
-                                    {domesticShippingCost.toLocaleString()} VND
-                                </TableCell>
-                                <TableCell align="right">{order.receiverAddress}</TableCell>
-                            </TableRow>
-                            <TableRow>
                                 <TableCell><strong>Tổng chi phí</strong></TableCell>
                                 <TableCell align="right">
                                     <strong>
-                                        {totalShippingCost.toLocaleString()} VND
+                                        {order.totalFee && order.totalFee.toLocaleString()} VND
                                     </strong>
                                 </TableCell>
                                 <TableCell align="right">Đã bao gồm thuế VAT</TableCell>

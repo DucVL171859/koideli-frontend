@@ -212,13 +212,17 @@ const Timeline = () => {
                             <Typography>Địa chỉ nhận: {order.receiverAddress}</Typography>
 
                             <Box sx={{ marginTop: 2 }}>
-                                {boxOptions && boxOptions.map(boxOption => (
-                                    <Box key={boxOption.boxOptionId} sx={{ padding: '8px', border: '1px solid #e0e0e0', margin: '4px 0' }}>
-                                        <Typography>Mã hộp: {boxOption.boxOptionId}</Typography>
-                                        <Typography>Tổng số cá: {boxOption.totalFish}</Typography>
-                                        <Typography>Sức chứa tối đa: {boxOption.maxVolume} lít</Typography>
-                                    </Box>
-                                ))}
+                                {orderDetailsMap[order.id]?.map(orderDetail => {
+                                    const matchedBoxOptions = boxOptions.filter(boxOption => boxOption.boxOptionId === orderDetail.boxOptionId);
+
+                                    return matchedBoxOptions.map(boxOption => (
+                                        <Box key={boxOption.boxOptionId} sx={{ padding: '8px', border: '1px solid #e0e0e0', margin: '4px 0' }}>
+                                            <Typography>Mã hộp: {boxOption.boxOptionId}</Typography>
+                                            <Typography>Tổng số cá: {boxOption.totalFish}</Typography>
+                                            <Typography>Sức chứa tối đa: {boxOption.maxVolume} lít</Typography>
+                                        </Box>
+                                    ));
+                                }) || <Typography>Không có chi tiết đơn hàng.</Typography>}
                             </Box>
                         </Box>
                     ))}

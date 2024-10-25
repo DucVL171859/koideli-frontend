@@ -17,6 +17,7 @@ import orderServices from 'services/orderServices';
 import koiFishServices from 'services/koiFishServices';
 import orderDetailServices from 'services/orderDetailServices';
 import boxOptionServices from 'services/boxOptionServices';
+import distanceServices from 'services/distanceServices';
 
 const OrderDetail = () => {
     const { slug } = useParams();
@@ -26,6 +27,9 @@ const OrderDetail = () => {
     const [currentOrderDetail, setCurrentOrderDetail] = useState([]);
     const [boxOption, setBoxOption] = useState([]);
     const [koiFist, setKoiFist] = useState([]);
+
+    const [distance, setDistance] = useState({});
+    const [domesticShippingCost, setDomesticShippingCost] = useState(0);
 
     const statusMessages = {
         Pending: 'Đơn hàng mới',
@@ -65,6 +69,7 @@ const OrderDetail = () => {
                 setCurrentOrderDetail(matchedOrderDetail);
                 matchedOrderDetail.forEach(detail => {
                     getBoxOption(detail.boxOptionId);
+                    getDistance(detail.distanceId);
                 });
             }
         };
@@ -91,6 +96,17 @@ const OrderDetail = () => {
             }
         };
 
+        const getDistance = async (distanceId) => {
+            let resOfDistance = await distanceServices.getDistanceById(distanceId);
+            if (resOfDistance) {
+                setDistance(resOfDistance.data.data);
+                let shippingFee = resOfDistance.data.data.price;
+                let totalDomesticShipping = 0;
+                totalDomesticShipping += shippingFee;
+                setDomesticShippingCost(totalDomesticShipping)
+            }
+        }
+
         getOrder();
     }, [slug]);
 
@@ -98,6 +114,12 @@ const OrderDetail = () => {
         const fishQuantities = option.fishes.reduce((sum, fish) => sum + fish.quantity, 0);
         return total + fishQuantities;
     }, 0);
+
+    const internationalShippingCost = boxOption.some(box => typeof box.name === 'string' && box.name.includes('-JP'))
+        ? boxOption.reduce((total, box) => total + box.price, 0)
+        : 0;
+
+    const totalShippingCost = domesticShippingCost + internationalShippingCost;
 
     return (
         <MainCard>
@@ -193,21 +215,18 @@ const OrderDetail = () => {
                         </TableHead>
                         <TableBody>
                             <TableRow>
-                                <TableCell>Chi phí đóng gói từ Nhật</TableCell>
+                                <TableCell>Chi phí vận chuyển từ Nhật</TableCell>
                                 <TableCell align="right">
-                                    {boxOption.reduce((total, box) => total + box.price, 0).toLocaleString()} VND
+                                    {boxOption.some(box => typeof box.name === 'string' && box.name.includes('-JP'))
+                                        ? boxOption.reduce((total, box) => total + box.price, 0).toLocaleString() + ' VND'
+                                        : '0 VND'}
                                 </TableCell>
                                 <TableCell align="right">{boxOption.length} hộp</TableCell>
                             </TableRow>
                             <TableRow>
-                                <TableCell>Chi phí đóng gói trong nước</TableCell>
-                                <TableCell align="right">0 VND</TableCell>
-                                <TableCell align="right"></TableCell>
-                            </TableRow>
-                            <TableRow>
                                 <TableCell>Chi phí vận chuyển trong nước</TableCell>
                                 <TableCell align="right">
-                                    {boxOption.reduce((total, box) => total + box.price, 0).toLocaleString()} VND
+                                    {domesticShippingCost.toLocaleString()} VND
                                 </TableCell>
                                 <TableCell align="right">{order.receiverAddress}</TableCell>
                             </TableRow>
@@ -215,7 +234,7 @@ const OrderDetail = () => {
                                 <TableCell><strong>Tổng chi phí</strong></TableCell>
                                 <TableCell align="right">
                                     <strong>
-                                        {boxOption.reduce((total, box) => total + box.price, 0).toLocaleString()} VND
+                                        {totalShippingCost.toLocaleString()} VND
                                     </strong>
                                 </TableCell>
                                 <TableCell align="right">Đã bao gồm thuế VAT</TableCell>

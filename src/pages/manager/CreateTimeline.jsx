@@ -148,8 +148,10 @@ const CreateTimeline = () => {
         // try {
         let resOfCreateTimeline = await deliveryServices.createTimeline(timelineInfo);
         if (resOfCreateTimeline) {
+            console.log(resOfCreateTimeline)
             let resOfTimelineDelivery = await timelineDeliveryServices.getTimelineDeliveryEnable();
             if (resOfTimelineDelivery) {
+                console.log(resOfTimelineDelivery)
                 let timelineData = resOfTimelineDelivery.data.data;
                 let matchedTimeline = timelineData.filter(timeline => timeline.vehicleId == slug);
                 let timelineID = matchedTimeline.map(timeline => timeline.id);
@@ -163,6 +165,7 @@ const CreateTimeline = () => {
 
                         let resOfCreateOrderTimeline = await createOrderTimeline(orderTimelineInfo);
                         if (resOfCreateOrderTimeline.data.data) {
+                            console.log(resOfCreateOrderTimeline)
                             toast.success('Thêm đơn hàng vào xe thành công');
                         } else {
                             toast.error('Thêm đơn hàng không thành công');
@@ -172,6 +175,7 @@ const CreateTimeline = () => {
                     await Promise.all(timelineID.map(async (id) => {
                         let resOfOrderInTimeline = await deliveryServices.getOrderDetailInTimeline(id);
                         if (resOfOrderInTimeline.data.data) {
+                            console.log(resOfOrderInTimeline)
                             let maxVolume = resOfOrderInTimeline.data.data.maxvolume;
                             let remainingVolume = resOfOrderInTimeline.data.data.remainingVolume;
                             let estimatedVolume = maxVolume - remainingVolume;
@@ -251,13 +255,17 @@ const CreateTimeline = () => {
                             <Typography>Người nhận: {order.receiverName}</Typography>
                             <Typography>Địa chỉ nhận: {order.receiverAddress}</Typography>
                             <Box sx={{ marginTop: 2 }}>
-                                {boxOptions && boxOptions.map(boxOption => (
-                                    <Box key={boxOption.boxOptionId} sx={{ padding: '8px', border: '1px solid #e0e0e0', margin: '4px 0' }}>
-                                        <Typography>Mã hộp: {boxOption.boxOptionId}</Typography>
-                                        <Typography>Tổng số cá: {boxOption.totalFish}</Typography>
-                                        <Typography>Sức chứa tối đa: {boxOption.maxVolume} lít</Typography>
-                                    </Box>
-                                ))}
+                                {orderDetailsMap[order.id]?.map(orderDetail => {
+                                    const matchedBoxOptions = boxOptions.filter(boxOption => boxOption.boxOptionId === orderDetail.boxOptionId);
+
+                                    return matchedBoxOptions.map(boxOption => (
+                                        <Box key={boxOption.boxOptionId} sx={{ padding: '8px', border: '1px solid #e0e0e0', margin: '4px 0' }}>
+                                            <Typography>Mã hộp: {boxOption.boxOptionId}</Typography>
+                                            <Typography>Tổng số cá: {boxOption.totalFish}</Typography>
+                                            <Typography>Sức chứa tối đa: {boxOption.maxVolume} lít</Typography>
+                                        </Box>
+                                    ));
+                                }) || <Typography>Không có chi tiết đơn hàng.</Typography>}
                             </Box>
                             <Button
                                 key={vehicle.id}

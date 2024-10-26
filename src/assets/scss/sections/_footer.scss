@@ -5,21 +5,25 @@
   position: relative;
   background-color: #080c24;
   padding-bottom: 50px;
+
   &.style-2 {
     .footer-top {
       padding: 0;
       border-color: rgba(255, 255, 255, 0.1);
     }
   }
+
   .footer-top {
     background-position: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     padding: 37px 0 0px;
     margin-bottom: 120px;
+
     .single-footer-top {
       display: flex;
       position: relative;
       margin-bottom: 33px;
+
       &:after {
         content: "";
         position: absolute;
@@ -27,8 +31,9 @@
         top: -38px;
         height: 160px;
         width: 61px;
-        background: url("~/public/assets/img/footer/rectangle.png");
+        background: url("public/assets/img/footer/rectangle.png");
       }
+
       .icon {
         flex: none;
         height: 80px;
@@ -39,6 +44,7 @@
         text-align: center;
         position: relative;
         margin: 6px 20px 0 6px;
+
         &:after {
           content: "";
           position: absolute;
@@ -51,6 +57,7 @@
           top: -6px;
         }
       }
+
       .details {
         h6 {
           font-weight: 700;
@@ -59,6 +66,7 @@
           color: #fff;
           margin-bottom: 4px;
         }
+
         p {
           font-weight: 400;
           font-size: 16px;
@@ -69,11 +77,13 @@
       }
     }
   }
+
   .widget {
     position: relative;
     z-index: 2;
     margin-bottom: 70px;
   }
+
   .widget-title {
     padding-bottom: 13px;
     margin-bottom: 26px;
@@ -82,6 +92,7 @@
     font-size: 24px;
     line-height: 31px;
     color: #f8f8f8;
+
     &:after {
       content: "";
       position: absolute;
@@ -89,19 +100,19 @@
       height: 3px;
       bottom: 0px;
       left: 0;
-      background: linear-gradient(
-        90.09deg,
-        #fa4318 -7.63%,
-        rgba(250, 67, 24, 0) 99.84%
-      );
+      background: linear-gradient(90.09deg,
+          #fa4318 -7.63%,
+          rgba(250, 67, 24, 0) 99.84%);
       transform: translate(0, 50%);
       z-index: -1;
     }
   }
+
   .widget_about {
     .thumb {
       margin-bottom: 13px;
     }
+
     .details {
       p {
         font-weight: 400;
@@ -112,10 +123,12 @@
       }
     }
   }
+
   .widget_nav_menu {
     ul {
       margin: 0;
       padding: 0;
+
       li {
         list-style: none;
         position: relative;
@@ -123,13 +136,16 @@
         font-weight: 400;
         font-size: 14px;
         line-height: 26px;
+
         i,
         svg {
           margin-right: 3px;
         }
-        + li {
+
+        +li {
           margin-top: 16px;
         }
+
         &:hover {
           &:after {
             background: var(--main-color);
@@ -139,30 +155,36 @@
     }
   }
 }
+
 .footer-bottom-area {
   background: #161922;
   padding: 21.5px 0;
+
   p {
     font-weight: 400;
     font-size: 16px;
     line-height: 26px;
     color: #fff;
     margin-bottom: 0;
+
     a {
       color: var(--main-color);
     }
   }
+
   ul {
     padding: 0;
     margin: 0;
     list-style: none;
+
     li {
       font-weight: 400;
       font-size: 16px;
       line-height: 26px;
       color: #fff;
       display: inline-block;
-      + li {
+
+      +li {
         border-left: 1px solid #fff;
         padding-left: 9px;
         margin-left: 6px;
@@ -170,23 +192,28 @@
     }
   }
 }
+
 .footer-top-subscribe {
   display: flex;
   align-items: center;
+
   h3 {
     color: #fff;
     margin-bottom: 0;
     padding: 50px 0 47px;
   }
+
   .media-left {
     margin-left: 78px;
     padding-left: 80px;
     padding-right: 58px;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
   }
+
   .thumb {
     flex: none;
   }
+
   .single-subscribe-inner {
     min-width: 360px;
     flex: none;
@@ -195,19 +222,23 @@
 
 .footer-area-3 {
   background: #201d2e;
+
   .footer-widget-area {
     padding: 130px 0 100px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   }
+
   ul {
     list-style: none;
     padding: 0 !important;
+
     li {
       a {
         color: #fff;
         padding: 3px 0;
         display: block;
         transition: all 0.2s linear;
+
         &:hover {
           color: var(--main-color);
         }
@@ -218,6 +249,7 @@
   .footer-copyright-area {
     padding: 20px 0;
     color: #fff;
+
     a {
       color: #fff;
     }
@@ -236,31 +268,37 @@
         li {
           display: inline-flex;
           margin: 5px;
+
           &:first-child {
             margin-left: 5px;
           }
+
           a {
             display: block;
             text-align: center;
             font-size: 16px;
             color: #fff;
           }
+
           &:hover {
             .facebook {
               i {
                 color: $facebook;
               }
             }
+
             .twitter {
               i {
                 color: $twitter;
               }
             }
+
             .youtube {
               i {
                 color: $youtube;
               }
             }
+
             .instagram {
               i {
                 color: $instagram;
@@ -271,6 +309,7 @@
       }
     }
   }
+
   .footer-widget {
     p {
       color: #fff;

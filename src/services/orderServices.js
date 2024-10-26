@@ -1,20 +1,33 @@
 import axios from "api/axios";
 import authHeader from "./authHeaderServices";
+import { dark } from "@mui/material/styles/createPalette";
 
 const getOrder = async () => {
     return await axios.get('/api/v1/Order', { headers: authHeader() });
 }
 
-const getOrderByName = async (name) => {
-    return await axios.get(`/api/v1/Order/${name}`, { headers: authHeader() });
+const getOrderById = async (id) => {
+    return await axios.get(`/api/v1/Order/id`,
+        {
+            params: {
+                id: id
+            }
+        },
+        { headers: authHeader() }
+    );
 }
 
-const createOrder = async () => {
-    return await axios.post(`/api/v1/Order/{'order'}`, { headers: authHeader() });
-}
+const createOrder = async (Order) => {
+  return await axios.post("/api/v1/Order", Order, {
+    headers: authHeader(),
+  });
+};
 
-const updateOrder = async (id) => {
-    return await axios.put(`/api/v1/Order/${id}`, { headers: authHeader() });
+const updateOrder = async (id, updatedData) => {
+    return await axios.put(`/api/v1/Order?id=${id}`,
+        updatedData,
+        { headers: authHeader() }
+    );
 }
 
 const deleteOrder = async (id) => {
@@ -23,7 +36,7 @@ const deleteOrder = async (id) => {
 
 export default {
     getOrder,
-    getOrderByName,
+    getOrderById,
     createOrder,
     updateOrder,
     deleteOrder

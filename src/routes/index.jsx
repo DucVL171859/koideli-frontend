@@ -5,6 +5,8 @@ import LoginRoutes from './LoginRoutes';
 import RegisterRoutes from './RegisterRoutes';
 import SaleRoutes from './SaleRoutes';
 import ManagerRoutes from './ManagerRoutes';
+import ProfileRoutes from './ProfileRoutes';
+import CreateOrderRoutes from './CreateOrder';
 
 const router = createBrowserRouter([
     AdminRoutes,
@@ -12,7 +14,9 @@ const router = createBrowserRouter([
     LoginRoutes,
     RegisterRoutes,
     SaleRoutes,
-    ManagerRoutes
+    ManagerRoutes,
+    ProfileRoutes,
+    CreateOrderRoutes
 ], {
     basename: '/'
 });

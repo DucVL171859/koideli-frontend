@@ -5,8 +5,8 @@ const getBranch = async () => {
     return await axios.get('/api/v1/Branch', { headers: authHeader() });
 }
 
-const getBranchByName = async (name) => {
-    return await axios.get(`/api/v1/Branch/${name}`, { headers: authHeader() });
+const getBranchById = async (id) => {
+    return await axios.get(`/api/v1/Branch/id?id=${id}`, { headers: authHeader() });
 }
 
 const createBranch = async () => {
@@ -23,7 +23,7 @@ const deleteBranch = async (id) => {
 
 export default {
     getBranch,
-    getBranchByName,
+    getBranchById,
     createBranch,
     updateBranch,
     deleteBranch

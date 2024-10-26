@@ -1,3 +1,4 @@
+import Logo from "components/logo/LogoMain"; // Assuming this is your logo component
 import { useState, useEffect } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -6,9 +7,9 @@ import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { styled } from "@mui/material/styles";
-import Logo from "components/logo/LogoMain"; // Assuming this is your logo component
 import { useNavigate } from "react-router-dom";
 import authServices from "services/authServices";
+import userService from "services/userServices"; // Assuming getProfileAPI exists
 
 const RightSection = styled("div")(() => ({
   display: "flex",
@@ -26,21 +27,40 @@ const Header = () => {
   const [anchorEl, setAnchorEl] = useState(null); // Anchor element for the dropdown menu
   const navigate = useNavigate();
 
-  // Check if user is logged in by looking for a token (or other flag) in sessionStorage
+  // Fetch user profile if a token exists in sessionStorage
   useEffect(() => {
-    const token = sessionStorage.getItem("token"); // Check for the token
-    const userRole = sessionStorage.getItem("role"); // Retrieve stored user data
-    if (token && userRole) {
-      setIsLoggedIn(true);
-      setUser(userRole); // Parse and set user data from session storage
+    const token = sessionStorage.getItem("token");
+
+    if (token) {
+      // Fetch user profile if token exists
+      const fetchUserProfile = async () => {
+        try {
+          const profileData = await userService.getProfileAPI(token);
+          if (profileData.success) {
+            const userProfile = profileData.data;
+            setUser(userProfile); // Set user data
+            setIsLoggedIn(true);  // Mark user as logged in
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          setIsLoggedIn(false); // Set logged-out state if fetching fails
+        }
+      };
+      fetchUserProfile();
     }
   }, []);
 
   const handleLogout = () => {
-    authServices.logout();
-    setIsLoggedIn(false); // Update the login state
+    authServices.logout(); // Clear session data
+    sessionStorage.clear(); // Clear sessionStorage (token and user data)
+    setIsLoggedIn(false); // Reset logged-in state
+    setUser(null); // Clear user data
     setAnchorEl(null); // Close the menu
-    navigate("/"); // Optionally redirect to home or login page
+    navigate("/login"); // Redirect to login page
+  };
+
+  const handleClickLogo = () => {
+    navigate("/");
   };
 
   // Handle opening the dropdown menu
@@ -65,73 +85,68 @@ const Header = () => {
       }}
     >
       <Toolbar>
-        <Logo />
+        <Logo onClick={handleClickLogo} />
+
         <RightSection>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }} onClick={() => navigate("/services")}>
             DỊCH VỤ
           </NavButton>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>BLOG</NavButton>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }} onClick={() => navigate("/blog")}>
+            BLOG
+          </NavButton>
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }} onClick={() => navigate("/pricing")}>
             BẢNG GIÁ
           </NavButton>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }} onClick={() => navigate("/about-us")}>
             VỀ CHÚNG TÔI
           </NavButton>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }}>
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }} onClick={() => navigate("/contact")}>
             LIÊN HỆ
           </NavButton>
 
-          {isLoggedIn ? (
+          {isLoggedIn && user ? (
             <>
-              {user && (
-                <>
-                  <Avatar
-                    // alt={user.name} // Display user name as alt text
-                    src={
-                      user.avatarUrl ||
-                      "https://firebasestorage.googleapis.com/v0/b/koideli.appspot.com/o/user-avt%2F819RNP-RSJL._SL1500_.jpg?alt=media&token=caedd232-d225-488a-bb75-9e3378b7af0d"
-                    }
-                    sx={{
-                      bgcolor: "#7d6e48",
-                      marginLeft: 2,
-                      cursor: "pointer",
-                    }}
-                    onClick={handleMenu} // Open the menu on click
-                  >
-                    {!user.avatarUrl && user.name
-                      ? user.name[0].toUpperCase()
-                      : null}
-                    {/* Show the first initial of the name if no avatar is available */}
-                  </Avatar>
+              <Avatar
+                alt={user.name || "User Avatar"}
+                src={
+                  user.urlAvatar || "https://firebasestorage.googleapis.com/v0/b/koideli.appspot.com/o/user-avt%2Fdefault_avatar.jpg?alt=media"
+                }
+                sx={{
+                  bgcolor: "#7d6e48",
+                  marginLeft: 2,
+                  cursor: "pointer",
+                }}
+                onClick={handleMenu} // Open the menu on click
+              >
+                {!user.urlAvatar && user.name ? user.name[0].toUpperCase() : null}
+              </Avatar>
 
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleClose}
-                    anchorOrigin={{
-                      vertical: "bottom",
-                      horizontal: "right",
-                    }}
-                    transformOrigin={{
-                      vertical: "top",
-                      horizontal: "right",
-                    }}
-                  >
-                    <MenuItem onClick={() => navigate("/profile")}>
-                      Hồ sơ cá nhân
-                    </MenuItem>
-                    <MenuItem onClick={() => navigate("/orders")}>
-                      Đơn hàng của tôi
-                    </MenuItem>
-                    <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
-                  </Menu>
-                </>
-              )}
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+              >
+                <MenuItem onClick={() => navigate("/user-profile")}>
+                  Hồ sơ cá nhân
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/orders")}>
+                  Đơn hàng của tôi
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
+              </Menu>
             </>
           ) : (
             <NavButton
               variant="contained"
-              href="/login"
+              onClick={() => navigate("/login")}
               sx={{
                 color: "#ffffff",
                 fontWeight: 700,

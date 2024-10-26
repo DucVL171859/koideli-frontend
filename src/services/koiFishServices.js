@@ -1,30 +1,44 @@
-import axios from "api/axios";
+import config from "api/axios";
 import authHeader from "./authHeaderServices";
 
 const getKoiFish = async () => {
-    return await axios.get('/api/v1/KoiFish', { headers: authHeader() });
-}
+  try {
+    // Add the Authorization header with the token
+    const response = await config.get(`/api/v1/KoiFish`, {
+      headers: authHeader(), // Passing token in Authorization header
+    });
 
-const getKoiFishByName = async (name) => {
-    return await axios.get(`/api/v1/KoiFish/${name}`, { headers: authHeader() });
+    if (response.status === 200) {
+      return response.data; // Return profile data
+    } else {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    throw error;
+  }
+};
+
+const getKoiFishById = async (id) => {
+  return await config.get(`/api/v1/KoiFish/id?id=${id}`, { headers: authHeader() });
 }
 
 const createKoiFish = async () => {
-    return await axios.post(`/api/v1/KoiFish/{'koiFish'}`, { headers: authHeader() });
+  return await config.post(`/api/v1/KoiFish/{'koiFish'}`, { headers: authHeader() });
 }
 
 const updateKoiFish = async (id) => {
-    return await axios.put(`/api/v1/KoiFish/${id}`, { headers: authHeader() });
+  return await config.put(`/api/v1/KoiFish/${id}`, { headers: authHeader() });
 }
 
 const deleteKoiFish = async (id) => {
-    return await axios.delete(`/api/v1/KoiFish/${id}`, { headers: authHeader() });
+  return await config.delete(`/api/v1/KoiFish/${id}`, { headers: authHeader() });
 }
 
 export default {
-    getKoiFish,
-    getKoiFishByName,
-    createKoiFish,
-    updateKoiFish,
-    deleteKoiFish
+  getKoiFish,
+  getKoiFishById,
+  createKoiFish,
+  updateKoiFish,
+  deleteKoiFish
 }

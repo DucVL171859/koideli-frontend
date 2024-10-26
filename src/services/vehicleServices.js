@@ -2,11 +2,11 @@ import axios from "api/axios";
 import authHeader from "./authHeaderServices";
 
 const getVehicle = async () => {
-    return await axios.get('/api/v1/Order', { headers: authHeader() });
+    return await axios.get('/api/v1/Vehicle', { headers: authHeader() });
 }
 
-const getVehicleByName = async (name) => {
-    return await axios.get(`/api/v1/Order/${name}`, { headers: authHeader() });
+const getVehicleById = async (id) => {
+    return await axios.get(`/api/v1/Vehicle/id?id=${id}`, { headers: authHeader() });
 }
 
 const createVehicle = async () => {
@@ -23,7 +23,7 @@ const deleteVehicle = async (id) => {
 
 export default {
     getVehicle,
-    getVehicleByName,
+    getVehicleById,
     createVehicle,
     updateVehicle,
     deleteVehicle

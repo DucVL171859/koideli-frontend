@@ -413,7 +413,6 @@ const CreateOrderPage = () => {
 
       setBoxOpShippingCost(boxShippingCosts); // Update state
 
-
       calculateTotalShippingCost(calculatedTotalFee, packingCost);
 
       toast.success("Tính tổng chi phí vận chuyển thành công!");
@@ -536,11 +535,11 @@ const CreateOrderPage = () => {
           return;
         }
 
-        const totalBoxShippingFee = 
-        shippingType === "Japan"
-        ? matchingBoxCost.shippingCost + matchingBoxCost.boxPrice
-        : matchingBoxCost.shippingCost
-        
+        const totalBoxShippingFee =
+          shippingType === "Japan"
+            ? matchingBoxCost.shippingCost + matchingBoxCost.boxPrice
+            : matchingBoxCost.shippingCost;
+
         const boxOptionPayload = {
           boxes: [
             {

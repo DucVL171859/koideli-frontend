@@ -91,3 +91,44 @@ export const handleLogout = (navigate, clearCart) => {
     clearCart(); // Clear cart if a function is provided
   }
 };
+
+// tool.js
+
+export const getStatusColor = (status) => {
+  switch (status) {
+    case "Pending":
+      return "#FFA500"; // Orange for Pending
+    case "Approved":
+      return "#32CD32"; // LimeGreen for Approved
+    case "Packed":
+      return "#FFD700"; // Gold for Packed
+    case "Completed":
+      return "#008000"; // Green for Completed
+    case "Cancelled":
+      return "#FF0000"; // Red for Cancelled
+    case "Delivering":
+      return "#1E90FF"; // DodgerBlue for Delivering
+    default:
+      return "#000000"; // Default to Black
+  }
+};
+
+export const translateStatusToVietnamese = (status) => {
+  switch (status) {
+    case "Pending":
+      return "Đang chờ duyệt";
+    case "Approved":
+      return "Đã phê duyệt";
+    case "Packed":
+      return "Đã đóng gói";
+    case "Completed":
+      return "Đã hoàn thành";
+    case "Cancelled":
+      return "Đã hủy";
+    case "Delivering":
+      return "Đang giao hàng";
+    default:
+      return status;
+  }
+};
+

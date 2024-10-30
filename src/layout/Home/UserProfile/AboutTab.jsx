@@ -23,7 +23,7 @@ const AboutTab = ({ setProfile }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    password: "", // Assuming password is optional for this form
+    password: "", 
     phoneNumber: "",
     roleId: "",
     gender: "",
@@ -31,6 +31,7 @@ const AboutTab = ({ setProfile }) => {
     isConfirmed: true,
     orderId: 0,
     urlAvatar: "",
+    address: "", // New address field
   });
   const [originalData, setOriginalData] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
@@ -45,14 +46,14 @@ const AboutTab = ({ setProfile }) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await userService.getProfileAPI(); // Fetch profile data using the token
-        const profileData = response.data; // Ensure we're accessing the data inside 'data' object
+        const response = await userService.getProfileAPI();
+        const profileData = response.data;
 
         if (profileData) {
           setFormData({
             name: profileData.name,
             email: profileData.email,
-            password: profileData.password, 
+            password: profileData.password,
             phoneNumber: profileData.phoneNumber,
             roleId: profileData.role.roleId,
             gender: profileData.gender,
@@ -60,8 +61,9 @@ const AboutTab = ({ setProfile }) => {
             isConfirmed: profileData.isConfirmed,
             orderId: profileData.orderId,
             urlAvatar: profileData.urlAvatar || "",
+            address: profileData.address || "", // Set initial address
           });
-          setOriginalData(profileData); // Store original data for comparison
+          setOriginalData(profileData);
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -125,6 +127,7 @@ const AboutTab = ({ setProfile }) => {
         isConfirmed: formData.isConfirmed,
         orderId: formData.orderId,
         urlAvatar: imageUrl !== originalData.urlAvatar ? imageUrl : originalData.urlAvatar,
+        address: formData.address !== originalData.address ? formData.address : originalData.address, // Update address
       };
 
       // Retrieve the user id from sessionStorage
@@ -136,7 +139,7 @@ const AboutTab = ({ setProfile }) => {
 
       // Pass the id from sessionStorage along with the profile data
       await userService.updateUser(userId, updatedProfile);
-      setProfile(updatedProfile); // Update state with new profile data
+      setProfile(updatedProfile);
       setHasChanges(false);
       toast.success("Tài khoản đã được cập nhật thành công!", {
         toastId: successToastId,
@@ -191,6 +194,16 @@ const AboutTab = ({ setProfile }) => {
               disabled
               required
             />
+            <TextField
+              fullWidth
+              margin="normal"
+              variant="outlined"
+              label="Địa chỉ"
+              name="address"
+              value={formData.address}
+              placeholder="Nhập địa chỉ"
+              onChange={handleChange}
+            />
             <Grid item xs={12}>
               <Stack spacing={1}>
                 <InputLabel htmlFor="gender">Giới tính *</InputLabel>
@@ -220,8 +233,6 @@ const AboutTab = ({ setProfile }) => {
               <Button
                 variant="contained"
                 component="span"
-                justifyContent="center"
-                alignItems="center"
                 fullWidth
                 style={{ height: "30px" }}
                 sx={{

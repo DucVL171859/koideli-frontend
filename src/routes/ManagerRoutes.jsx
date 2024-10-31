@@ -10,6 +10,7 @@ const Order = Loadable(lazy(() => import('pages/manager/Order')));
 const OrderChecking = Loadable(lazy(() => import('pages/manager/OrderChecking')));
 const OrderUpdate = Loadable(lazy(() => import('pages/manager/OrderUpdate')));
 const OrderDetail = Loadable(lazy(() => import('pages/manager/OrderDetail')));
+const PricingTable = Loadable(lazy(() => import('pages/manager/PricingTable')));
 const Blogs = Loadable(lazy(() => import('pages/manager/Blogs')));
 const Tasks = Loadable(lazy(() => import('pages/manager/Tasks')));
 
@@ -54,6 +55,10 @@ const ManagerRoutes = {
         {
             path: 'order-detail/:slug',
             element: <OrderDetail />
+        },
+        {
+            path: 'pricing',
+            element: <PricingTable />
         },
         {
             path: 'blogs',

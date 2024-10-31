@@ -32,8 +32,8 @@ const createDistance = async () => {
   return await config.post(`/api/v1/Distance`, { headers: authHeader() });
 }
 
-const updateDistance = async (id) => {
-  return await config.put(`/api/v1/Distance/${id}`, { headers: authHeader() });
+const updateDistance = async (id, updatedData) => {
+  return await config.put(`/api/v1/Distance?id=${id}`, updatedData, { headers: authHeader() });
 }
 
 const deleteDistance = async (id) => {

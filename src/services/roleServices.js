@@ -5,6 +5,10 @@ const getRole = async () => {
     return await axios.get('/api/v1/Role ', { headers: authHeader() });
 }
 
+const getRoleById = async (id) => {
+    return await axios.get(`/api/v1/Role/id?id=${id}`, { headers: authHeader() });
+}
+
 const getRoleEnable = async () => {
     return await axios.get(`/api/v1/Role/enable`, { headers: authHeader() });
 }
@@ -23,6 +27,7 @@ const deleteRole = async (id) => {
 
 export default {
     getRole,
+    getRoleById,
     getRoleEnable,
     createRole,
     updateRole,

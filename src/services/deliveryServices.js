@@ -17,6 +17,10 @@ const createOrderTimeline = async (orderTimelineInfo) => {
     return await axios.post(`/api/v1/Delivery/assign-ordetail-timeline`, orderTimelineInfo, { headers: authHeader() });
 }
 
+const updateTimelineStatus = async (timelineId) => {
+    return await axios.put(`/api/v1/Delivery/update-timeline-status?timelineID=${timelineId}` { headers: authHeader() });
+}
+
 export default {
     getOrderDetailInfo,
     getOrderDetailInTimeline,

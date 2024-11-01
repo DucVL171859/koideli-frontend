@@ -183,6 +183,15 @@ const ExistingTimelines = () => {
                                             Xem Chi Tiết
                                         </Button>
                                     </TableCell>
+                                    <TableCell>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={() => handleOpenConfirmDialog(timeline.id)}
+                                        >
+                                            Cập nhật Trạng thái
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             );
                         })}

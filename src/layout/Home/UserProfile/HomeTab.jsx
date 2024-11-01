@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import RechargeModal from "./rechargeModal";
-import userService from "services/userServices"
+import userService from "services/userServices";
 import {
   Table,
   TableBody,
@@ -70,7 +70,10 @@ const HomeTab = ({ initialProfile }) => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const { transactions, pagination } = await getAllProfileTransactionAPI(page, 10);
+        const { transactions, pagination } = await getAllProfileTransactionAPI(
+          page,
+          10
+        );
         setTransactions(transactions);
         setTotalPages(pagination.TotalPages);
         setLoadingTransactions(false);
@@ -87,7 +90,10 @@ const HomeTab = ({ initialProfile }) => {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const { tickets, pagination } = await getAllEventCheckInAPI(ticketPage, 5);
+        const { tickets, pagination } = await getAllEventCheckInAPI(
+          ticketPage,
+          5
+        );
         const eventMap = new Map();
         tickets.forEach((ticket) => {
           if (!eventMap.has(ticket.event.id)) {
@@ -215,26 +221,56 @@ const HomeTab = ({ initialProfile }) => {
     <div className="tab-content" id="myTabContent">
       <div className="tab-pane fade active show" id="feed" role="tabpanel">
         <div className="nav my-event-tabs mt-4" role="tablist">
-          <button className="event-link active" data-bs-toggle="tab" data-bs-target="#wallet" type="button" role="tab" aria-controls="wallet" aria-selected="true">
+          <button
+            className="event-link active"
+            data-bs-toggle="tab"
+            data-bs-target="#wallet"
+            type="button"
+            role="tab"
+            aria-controls="wallet"
+            aria-selected="true"
+          >
             <span>Ví của tôi</span>
           </button>
-          <button className="event-link" data-bs-toggle="tab" data-bs-target="#allTransactions" type="button" role="tab" aria-controls="allTransactions" aria-selected="false">
+          <button
+            className="event-link"
+            data-bs-toggle="tab"
+            data-bs-target="#allTransactions"
+            type="button"
+            role="tab"
+            aria-controls="allTransactions"
+            aria-selected="false"
+          >
             <span>Xem tất cả Giao dịch</span>
           </button>
-          <button className="event-link" data-bs-toggle="tab" data-bs-target="#feedback" type="button" role="tab" aria-controls="feedback" aria-selected="false">
+          <button
+            className="event-link"
+            data-bs-toggle="tab"
+            data-bs-target="#feedback"
+            type="button"
+            role="tab"
+            aria-controls="feedback"
+            aria-selected="false"
+          >
             <span>Xem đánh giá sự kiện đã tham gia</span>
           </button>
         </div>
 
         <div className="tab-content">
-          <div className="tab-pane fade show active" id="wallet" role="tabpanel">
+          <div
+            className="tab-pane fade show active"
+            id="wallet"
+            role="tabpanel"
+          >
             <div className="row">
               <div className="col-md-12">
                 <div className="main-card mt-4">
                   <div className="card-top p-4">
                     <div className="card-event-img">
                       <img
-                        src={profile.urlAvatar || "https://via.placeholder.com/150"}
+                        src={
+                          profile.urlAvatar || "https://via.placeholder.com/150"
+                        }
                         alt="Profile Avatar"
                       />
                     </div>
@@ -243,15 +279,11 @@ const HomeTab = ({ initialProfile }) => {
                       <div className="evnt-time">
                         Role: {profile.role.roleName}
                       </div>
-                      <div className="evnt-time">
-                        Email: {profile.email}
-                      </div>
+                      <div className="evnt-time">Email: {profile.email}</div>
                       <div className="evnt-time">
                         Phone: {profile.phoneNumber}
                       </div>
-                      <div className="evnt-time">
-                        Gender: {profile.gender}
-                      </div>
+                      <div className="evnt-time">Gender: {profile.gender}</div>
                       <div className="event-btn-group">
                         <button className="esv-btn me-2" onClick={handleShow}>
                           <i className="fa-solid fa-wallet me-2" />
@@ -266,7 +298,6 @@ const HomeTab = ({ initialProfile }) => {
           </div>
 
           {/* Remaining tabs... */}
-
         </div>
       </div>
 
@@ -302,10 +333,24 @@ const HomeTab = ({ initialProfile }) => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleFeedbackClose} sx={{ color: "white", backgroundColor: "#450b00", "&:hover": { backgroundColor: "#ff7f50" } }}>
+          <Button
+            onClick={handleFeedbackClose}
+            sx={{
+              color: "white",
+              backgroundColor: "#450b00",
+              "&:hover": { backgroundColor: "#ff7f50" },
+            }}
+          >
             Hủy
           </Button>
-          <Button onClick={handleFeedbackSubmit} sx={{ color: "white", backgroundColor: "#450b00", "&:hover": { backgroundColor: "#ff7f50" } }}>
+          <Button
+            onClick={handleFeedbackSubmit}
+            sx={{
+              color: "white",
+              backgroundColor: "#450b00",
+              "&:hover": { backgroundColor: "#ff7f50" },
+            }}
+          >
             Gửi Đánh giá
           </Button>
         </DialogActions>

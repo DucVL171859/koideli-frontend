@@ -7,10 +7,10 @@ const DeliveryPage = Loadable(
 );
 const NewDelivery = Loadable(lazy(() => import("pages/delivery/NewDelivery")));
 const DeliveryTracking = Loadable(
-  lazy(() => import("pages/delivery/DeliveryTracking"))
+  lazy(() => import("pages/delivery/DeliveryDetails"))
 );
-const DeliveryCancel = Loadable(
-  lazy(() => import("pages/delivery/DeliveryCancel"))
+const DeliveryUpdateOrder = Loadable(
+  lazy(() => import("pages/delivery/DeliveryUpdateOrder"))
 );
 const DeliveryUpdate = Loadable(
   lazy(() => import("pages/delivery/DeliveryUpdate"))
@@ -18,6 +18,9 @@ const DeliveryUpdate = Loadable(
 const Blogs = Loadable(lazy(() => import("pages/delivery/Blogs")));
 const Tasks = Loadable(lazy(() => import("pages/delivery/Tasks")));
 const Information = Loadable(lazy(() => import("pages/delivery/Infromation")));
+const UpdateOrderStatus = Loadable(
+  lazy(() => import("pages/delivery/DeliveryDetails"))
+);
 
 const DeliveryRoutes = {
   path: "/delivery",
@@ -27,6 +30,7 @@ const DeliveryRoutes = {
       path: "welcome",
       element: <DeliveryPage />,
     },
+
     {
       path: "delivery-checking",
       element: <NewDelivery />,
@@ -41,8 +45,17 @@ const DeliveryRoutes = {
       element: <DeliveryTracking />,
     },
     {
-      path: "delivery-cancel",
-      element: <DeliveryCancel />,
+      path: "delivery-update-order",
+      children: [
+        {
+          path: "",
+          element: <DeliveryUpdateOrder />,
+        },
+        {
+          path: ":slug/update-timeline",
+          element: <UpdateOrderStatus />,
+        },
+      ],
     },
     {
       path: "blogs",

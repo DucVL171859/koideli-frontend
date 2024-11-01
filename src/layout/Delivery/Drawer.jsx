@@ -11,7 +11,7 @@ const DrawerStyled = styled(Drawer)(() => ({
 
 const DrawerNav = [
   { title: "Delivery List", route: "/delivery/delivery-update" },
-  { title: "Delivery Cancel", route: "/delivery/delivery-cancel" },
+  { title: "Delivery Update Order", route: "/delivery/delivery-update-order" },
   { title: "Blogs", route: "/delivery/blogs" },
   { title: "Tasks", route: "/delivery/tasks" },
   { title: "Information", route: "/delivery/information" },

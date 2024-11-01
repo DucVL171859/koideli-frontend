@@ -322,6 +322,7 @@ const Timeline = () => {
                                     return matchedBoxOptions.map(boxOption => (
                                         <Grid item xs={3} key={boxOption.boxOptionId}>
                                             <Box sx={{ padding: '8px', border: '1px solid #000', margin: '4px 0', bgcolor: '#a38d69' }}>
+                                                <Typography sx={{ color: '#fff' }}>Mã vận đơn: {orderDetail.id}</Typography>
                                                 <Typography sx={{ color: '#fff' }}>Loại hộp: {boxOption.boxName}</Typography>
                                                 <Typography sx={{ color: '#fff' }}>Mã hộp: {boxOption.boxOptionId}</Typography>
                                                 <Typography sx={{ color: '#fff' }}>Tổng số cá: {boxOption.totalFish}</Typography>
@@ -338,6 +339,11 @@ const Timeline = () => {
                     <Button onClick={handleDialogClose} color="primary">Đóng</Button>
                 </DialogActions>
             </Dialog>
+
+            <MainCard sx={{ mt: 2 }}>
+                <Typography variant="h5" fontWeight={600}>Lịch trình đã có</Typography>
+                <ExistingTimelines />
+            </MainCard>
 
             <MainCard sx={{ mt: 2 }}>
                 <Typography variant="h5" fontWeight={600}>Lịch trình mới</Typography>
@@ -457,11 +463,6 @@ const Timeline = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-
-            <MainCard sx={{ mt: 2 }}>
-                <Typography variant="h5" fontWeight={600}>Lịch trình đã có</Typography>
-                <ExistingTimelines />
-            </MainCard>
         </>
     );
 };

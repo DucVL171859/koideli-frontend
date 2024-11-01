@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import {
     Table,
     TableBody,
@@ -8,15 +8,27 @@ import {
     TableRow,
     Paper,
     FormControl,
-    InputLabel,
-    Select,
+    TextField,
     MenuItem,
     Button,
+    InputLabel,
+    Select,
+    Checkbox,
+    ListItemText,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Box,
 } from "@mui/material";
 import timelineDeliveryServices from "services/timelineDeliveryServices";
-import vehicleServices from 'services/vehicleServices';
 import branchServices from 'services/branchServices';
 import { useNavigate } from 'react-router-dom';
+import orderServices from 'services/orderServices';
+import orderDetailServices from 'services/orderDetailServices';
+import { toast } from 'react-toastify';
+import deliveryServices from 'services/deliveryServices';
+import boxServices from 'services/boxServices';
 
 const formatDateTime = (dateString) => {
     const options = {
@@ -76,19 +88,39 @@ const StatusCircle = ({ status }) => {
 
 const ExistingTimelines = () => {
     const navigate = useNavigate();
-    const [vehicles, setVehicles] = useState([]);
 
     const [existingTimelines, setExistingTimelines] = useState([]);
-    const [filteredTimelines, setFilteredTimelines] = useState([]);
+    const [timelines, setTimelines] = useState([]);
+    const [suitableTimeline, setSuitableTimeline] = useState([]);
 
     const [branches, setBranches] = useState([]);
-    const [selectedBranch, setSelectedBranch] = useState({});
+    const [selectedBranches, setSelectedBranches] = useState([]);
+
+    const [startDate, setStartDate] = useState('');
+
+    const [orders, setOrders] = useState([]);
+    const [selectedOrder, setSelectedOrder] = useState('');
+    const [orderDetails, setOrderDetails] = useState([]);
+    const [matchedOrderDetails, setMatchedOrderDetails] = useState([]);
+    const [selectedOrderDetails, setSelectedOrderDetails] = useState([]);
+
+    const [boxes, setBoxes] = useState([]);
+
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
-            await getBranches();
-            await getExistingTimelines();
-            await getVehicles();
+            try {
+                await Promise.all([
+                    getBranches(),
+                    getExistingTimelines(),
+                    getOrders(),
+                    getOrderDetails(),
+                    getBoxes()
+                ]);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
         };
 
         fetchData();
@@ -98,33 +130,86 @@ const ExistingTimelines = () => {
         let resOfExistingTimeline = await timelineDeliveryServices.getTimelineDeliveryEnable();
         if (resOfExistingTimeline.data.data) {
             setExistingTimelines(resOfExistingTimeline.data.data);
-            setFilteredTimelines(resOfExistingTimeline.data.data);
         }
-    }
-
-    const getVehicles = async () => {
-        let resOfVehicles = await vehicleServices.getVehicle();
-        if (resOfVehicles.data.data) {
-            setVehicles(resOfVehicles.data.data);
-        }
-    }
+    };
 
     const getBranches = async () => {
         let resOfBranches = await branchServices.getBranch();
         if (resOfBranches.data.data) {
             setBranches(resOfBranches.data.data);
         }
+    };
+
+    const getOrders = async () => {
+        let resOfOrders = await orderServices.getOrder();
+        if (resOfOrders.data.data) {
+            let packedOrder = resOfOrders.data.data.filter(order => order.isShipping === 'Packed');
+            setOrders(packedOrder);
+        }
+    };
+
+    const getOrderDetails = async () => {
+        let resOfOrderDetails = await orderDetailServices.getOrderDetail();
+        if (resOfOrderDetails.data.data) {
+            setOrderDetails(resOfOrderDetails.data.data);
+        }
+    }
+
+    const getBoxes = async () => {
+        let resOfBoxes = await boxServices.getBox();
+        if (resOfBoxes.data) {
+            setBoxes(resOfBoxes.data);
+        }
     }
 
     const handleBranchChange = (event) => {
-        const selectedBranchId = event.target.value;
-        setSelectedBranch(selectedBranchId);
+        const value = event.target.value;
+        setSelectedBranches(value);
+    };
 
-        if (selectedBranchId) {
-            const filtered = existingTimelines.filter(timeline => timeline.branchId === selectedBranchId);
-            setFilteredTimelines(filtered);
+    const handleOrderChange = (event) => {
+        let orderId = event.target.value;
+        setSelectedOrder(orderId);
+        let matchedOrderDetails = orderDetails.filter(orderDetail => orderDetail.orderId === orderId);
+        setMatchedOrderDetails(matchedOrderDetails);
+        setSelectedOrderDetails([]);
+        setDialogOpen(true);
+    };
+
+    const handleStartDateChange = (event) => {
+        let date = event.target.value;
+        setStartDate(date);
+    };
+
+    const handleCheckboxChange = (detailId) => {
+        setSelectedOrderDetails((prevSelected) => {
+            if (prevSelected.includes(detailId)) {
+                return prevSelected.filter(id => id !== detailId);
+            } else {
+                return [...prevSelected, detailId];
+            }
+        });
+    };
+
+    const handleAcceptOrderDetails = () => {
+        setDialogOpen(false);
+    };
+
+    const handleFilterTimelines = async () => {
+        if (selectedBranches.length === 0 || !selectedOrder || !startDate) {
+            toast.error('Vui lòng điền đầy đủ thông tin');
+            return;
+        }
+
+        let resOfSuitableTimelines = await deliveryServices.getSuitableTimeline(selectedOrderDetails[0], selectedBranches, startDate);
+        if (resOfSuitableTimelines.data.data) {
+            let groupedTimelines = resOfSuitableTimelines.data.data.map(vehicleTimeline => ({
+                vehicle: vehicleTimeline,
+                timelines: vehicleTimeline.timelines
+            }));
+            setSuitableTimeline(groupedTimelines);
         } else {
-            setFilteredTimelines(existingTimelines);
+            toast.error('Không có lịch nào phù hợp');
         }
     };
 
@@ -134,21 +219,70 @@ const ExistingTimelines = () => {
 
     return (
         <div>
-            <FormControl margin="normal" sx={{ width: '300px' }}>
-                <InputLabel id="branch-select-label">Chọn Chuyến Nhỏ</InputLabel>
-                <Select
-                    labelId="branch-select-label"
-                    value={selectedBranch}
-                    onChange={handleBranchChange}
+            <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <FormControl margin="normal" sx={{ width: '300px', mb: 2 }}>
+                        <InputLabel id="branch-select-label">Chọn Chuyến Nhỏ</InputLabel>
+                        <Select
+                            labelId="branch-select-label"
+                            multiple
+                            value={selectedBranches}
+                            onChange={handleBranchChange}
+                            renderValue={(selected) => selected.join(', ')}
+                        >
+                            {branches.map((branch) => (
+                                <MenuItem key={branch.id} value={branch.id}>
+                                    <Checkbox checked={selectedBranches.indexOf(branch.id) > -1} />
+                                    <ListItemText primary={`${branch.id} - ${branch.name}`} />
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <FormControl margin="normal" sx={{ width: '300px', mb: 2 }}>
+                        <InputLabel id="order-select-label">Chọn Đơn Hàng</InputLabel>
+                        <Select
+                            labelId="order-select-label"
+                            value={selectedOrder}
+                            onChange={(e) => handleOrderChange(e)}
+                            MenuProps={{
+                                PaperProps: {
+                                    role: 'menu',
+                                    'aria-hidden': false,
+                                },
+                            }}
+                        >
+                            {orders && orders.map((order) => (
+                                <MenuItem key={order.id} value={order.id}>
+                                    {order.id}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <TextField
+                        margin="normal"
+                        label="Chọn Ngày Bắt Đầu"
+                        type="date"
+                        value={startDate}
+                        onChange={handleStartDateChange}
+                        InputLabelProps={{
+                            shrink: true,
+                        }}
+                        sx={{ width: '300px', mt: 2 }}
+                    />
+                </Box>
+
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleFilterTimelines}
+                    sx={{ ml: 2 }}
                 >
-                    <MenuItem value="">Tất cả</MenuItem>
-                    {branches.map((branch) => (
-                        <MenuItem key={branch.id} value={branch.id}>
-                            {branch.startPoint} - {branch.endPoint}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+                    Tìm lịch phù hợp
+                </Button>
+            </Box>
+
             <TableContainer component={Paper} sx={{ mt: 2 }}>
                 <Table>
                     <TableHead>
@@ -156,39 +290,118 @@ const ExistingTimelines = () => {
                             <TableCell>Xe</TableCell>
                             <TableCell>Các chuyến nhỏ</TableCell>
                             <TableCell>Dự kiến bắt đầu - kết thúc</TableCell>
-                            <TableCell>Thời điểm kết thúc</TableCell>
+                            <TableCell>Sức chứa hiện tại</TableCell>
+                            <TableCell>Đề xuất</TableCell>
                             <TableCell>Trạng thái</TableCell>
                             <TableCell>Hành động</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {filteredTimelines && filteredTimelines.map((timeline) => {
-                            const vehicle = vehicles.find(v => v.id === timeline.vehicleId) || {};
-                            return (
-                                <TableRow key={timeline.id}>
-                                    <TableCell>{vehicle.name || 'Không xác định'}</TableCell>
-                                    <TableCell>{branches.find(branch => branch.id === timeline.branchId).name}</TableCell>
-                                    <TableCell>{formatDateTime(timeline.startDay)} - {formatDateTime(timeline.endDay)}</TableCell>
-                                    <TableCell>{timeline.timeCompleted || 'Chưa hoàn thành'}</TableCell>
-                                    <TableCell>
-                                        <StatusCircle status={timeline.isCompleted} />
-                                        {getStatusLabel(timeline.isCompleted)}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={() => handleViewDetail(timeline.id)}
-                                        >
-                                            Xem Chi Tiết
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
+                        {
+                            suitableTimeline && suitableTimeline.map((vehicleTimeline, index) => (
+                                <Fragment key={index}>
+                                    {
+                                        vehicleTimeline.timelines.map(timeline => (
+                                            <TableRow key={timeline.timelineId}>
+                                                {timeline === vehicleTimeline.timelines[0] && (
+                                                    <TableCell rowSpan={vehicleTimeline.timelines.length}>{vehicleTimeline.vehicle.vehicleName}</TableCell>
+                                                )}
+                                                <TableCell>{timeline.branchName || 'Không xác định'}</TableCell>
+                                                <TableCell>{formatDateTime(timeline.startDate)} - {formatDateTime(timeline.endDate)}</TableCell>
+                                                <TableCell>{timeline.currentVolume || '0'} / {vehicleTimeline.vehicle.vehicleVolume || ''} lít</TableCell>
+                                                <TableCell>
+                                                    {
+                                                        boxes && (
+                                                            <>
+                                                                {(() => {
+                                                                    let mediumTotal = 0;
+                                                                    let largeTotal = 0;
+
+                                                                    boxes.forEach(box => {
+                                                                        if (box.name.includes('Medium - VN')) {
+                                                                            mediumTotal += box.maxVolume;
+                                                                        } else if (box.name.includes('Large - VN')) {
+                                                                            largeTotal += box.maxVolume;
+                                                                        }
+                                                                    });
+
+                                                                    const maxMediumQuantity = Math.floor(timeline.remainingVolume / 50);
+                                                                    const maxLargeQuantity = Math.floor(timeline.remainingVolume / 90)
+
+                                                                    return (
+                                                                        <>
+                                                                            <div>Có thể thêm tối đa {maxMediumQuantity} Medium box{maxMediumQuantity !== 1 ? 'es' : ''} dựa trên remaining volume</div>
+                                                                            <div>Có thể thêm tối đa {maxLargeQuantity} Large box{maxLargeQuantity !== 1 ? 'es' : ''} dựa trên remaining volume</div>
+                                                                        </>
+                                                                    );
+                                                                })()}
+                                                            </>
+                                                        )
+                                                    }
+                                                </TableCell>
+                                                <TableCell>
+                                                    <StatusCircle status={timeline.isComplete} />
+                                                    {getStatusLabel(timeline.isComplete)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button
+                                                        variant="contained"
+                                                        color="primary"
+                                                        onClick={() => handleViewDetail(timeline.timelineId)}
+                                                    >
+                                                        Xem Chi Tiết
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    }
+                                </Fragment>
+                            ))
+                        }
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+                <DialogTitle>Chi Tiết Đơn Hàng</DialogTitle>
+                <DialogContent>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>
+                                    <Checkbox
+                                        checked={matchedOrderDetails.every(detail => selectedOrderDetails.includes(detail.id))}
+                                        onChange={(event) => {
+                                            let checked = event.target.checked;
+                                            setSelectedOrderDetails(checked ? matchedOrderDetails.map(detail => detail.id) : []);
+                                        }}
+                                    />
+                                </TableCell>
+                                <TableCell>Mã đơn hàng</TableCell>
+                                <TableCell>Mã vận đơn</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {matchedOrderDetails && matchedOrderDetails.map((detail) => (
+                                <TableRow key={detail.id}>
+                                    <TableCell>
+                                        <Checkbox
+                                            checked={selectedOrderDetails.includes(detail.id)}
+                                            onChange={() => handleCheckboxChange(detail.id)}
+                                        />
+                                    </TableCell>
+                                    <TableCell>{selectedOrder}</TableCell>
+                                    <TableCell>{detail.id}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleAcceptOrderDetails}>Chấp Nhận</Button>
+                    <Button onClick={() => setDialogOpen(false)}>Hủy</Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

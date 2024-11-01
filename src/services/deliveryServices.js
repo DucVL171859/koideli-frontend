@@ -23,7 +23,7 @@ const createOrderTimeline = async (orderTimelineInfo) => {
 }
 
 const updateTimelineStatus = async (timelineId) => {
-    return await axios.put(`/api/v1/Delivery/update-timeline-status?timelineID=${timelineId}` { headers: authHeader() });
+    return await axios.put(`/api/v1/Delivery/update-timeline-status?timelineID=${timelineId}`, { headers: authHeader() });
 }
 
 export default {
@@ -31,5 +31,6 @@ export default {
     getOrderDetailInTimeline,
     getSuitableTimeline,
     createTimeline,
-    createOrderTimeline
+    createOrderTimeline,
+    updateTimelineStatus
 }

@@ -1,9 +1,10 @@
+import catalog from './catalog';
 import dashboard from './dashboard';
 
 // ==============================|| MENU ITEMS ||============================== //
 
 const menuItems = {
-    items: [dashboard]
+    items: [dashboard, catalog]
 };
 
 export default menuItems;

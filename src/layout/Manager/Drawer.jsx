@@ -13,6 +13,7 @@ const DrawerNav = [
     { title: 'Lịch trình', route: '/manager/timeline' },
     { title: 'Chi nhánh', route: '/manager/branch' },
     { title: 'Đơn hàng', route: '/manager/order' },
+    { title: 'Bảng giá', route: '/manager/pricing' },
     { title: 'Bài viết', route: '/manager/blogs' },
     { title: 'Đầu việc', route: '/manager/tasks' }
 ];

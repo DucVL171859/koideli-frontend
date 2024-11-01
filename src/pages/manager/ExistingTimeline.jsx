@@ -330,8 +330,9 @@ const ExistingTimelines = () => {
 
                                                                     return (
                                                                         <>
-                                                                            <div>Có thể thêm tối đa {maxMediumQuantity} Medium box{maxMediumQuantity !== 1 ? 'es' : ''} dựa trên remaining volume</div>
-                                                                            <div>Có thể thêm tối đa {maxLargeQuantity} Large box{maxLargeQuantity !== 1 ? 'es' : ''} dựa trên remaining volume</div>
+                                                                            <div>Có thể thêm tối đa {maxMediumQuantity} hộp Medium</div>
+                                                                            <div>Hoặc</div>
+                                                                            <div>Có thể thêm tối đa {maxLargeQuantity} hộp Large</div>
                                                                         </>
                                                                     );
                                                                 })()}

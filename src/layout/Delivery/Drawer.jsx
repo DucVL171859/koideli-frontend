@@ -10,8 +10,8 @@ const DrawerStyled = styled(Drawer)(() => ({
 }));
 
 const DrawerNav = [
-  { title: "Delivery List", route: "/delivery/delivery-update" },
-  { title: "Delivery Update Order", route: "/delivery/delivery-update-order" },
+  { title: "CẬP NHẬT TRẠNG THÁI CHUYẾN", route: "/delivery/delivery-update" },
+  { title: "CẬP NHẬT TRẠNG THÁI GIAO HÀNG", route: "/delivery/delivery-update-order" },
   { title: "Blogs", route: "/delivery/blogs" },
   { title: "Tasks", route: "/delivery/tasks" },
   { title: "Information", route: "/delivery/information" },

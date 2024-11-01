@@ -33,6 +33,7 @@ import timelineDeliveryServices from "services/timelineDeliveryServices";
 import { toast } from "react-toastify";
 import branchServices from "services/branchServices";
 import orderTimelineServices from "services/orderTimelineServices";
+import { translateStatusToVietnamese } from "utils/tools";
 
 const CreateTimeline = () => {
   const { slug } = useParams();
@@ -371,7 +372,7 @@ const CreateTimeline = () => {
                       </TableCell>
                       {isFirstOccurrence ? (
                         <TableCell rowSpan={rowSpan}>
-                          {orderInfo?.isShipping || "N/A"}
+                          {translateStatusToVietnamese(orderInfo?.isShipping || "N/A")}
                         </TableCell>
                       ) : null}
 

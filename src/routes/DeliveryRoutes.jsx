@@ -30,19 +30,9 @@ const DeliveryRoutes = {
       path: "welcome",
       element: <DeliveryPage />,
     },
-
-    {
-      path: "delivery-checking",
-      element: <NewDelivery />,
-    },
     {
       path: "delivery-update",
       element: <DeliveryUpdate />,
-    },
-
-    {
-      path: "delivery-tracking",
-      element: <DeliveryTracking />,
     },
     {
       path: "delivery-update-order",

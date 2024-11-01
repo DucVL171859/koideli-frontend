@@ -1,5 +1,5 @@
-import { Box, Grid, Typography, Link, Divider } from '@mui/material';
-import Logo from "components/logo/LogoMain"; 
+import { Box, Grid, Typography, Link } from '@mui/material';
+import Logo from "components/logo/LogoMain";
 
 const FooterSection = ({ title, children }) => (
     <Box>
@@ -14,7 +14,8 @@ const Footer = () => {
     return (
         <Box
             sx={{
-                backgroundColor: 'background.paper',
+                backgroundColor: '#000000', // Dark background
+                color: 'white', // Light text color
                 padding: 4,
                 marginTop: 'auto',
                 display: 'flex',
@@ -25,14 +26,12 @@ const Footer = () => {
             <Grid container spacing={2} justifyContent="center">
                 {/* Column 1: Logo and Info */}
                 <Grid item xs={12} sm={6} md={3}>
-                    <FooterSection title="Store Info">
+                    <FooterSection title="Thông Tin Cửa Hàng">
                         <Typography component='div' variant="body2" color="text.secondary">
-                            <Logo
-                                style={{ height: 60, marginBottom: 20, }}
-                            />
+                            <Logo style={{ height: 60, marginBottom: 20 }} />
                             <Typography>
-                                Welcome to our store! We offer a variety of products to meet your needs.
-                                Our mission is to provide high-quality items and excellent customer service.
+                                Chào mừng bạn đến với cửa hàng của chúng mình! Chúng mình cung cấp nhiều loại sản phẩm để đáp ứng nhu cầu của bạn.
+                                Sứ mệnh của chúng mình là cung cấp những mặt hàng chất lượng cao và dịch vụ khách hàng xuất sắc.
                             </Typography>
                         </Typography>
                     </FooterSection>
@@ -40,22 +39,22 @@ const Footer = () => {
 
                 {/* Column 2: Support */}
                 <Grid item xs={12} sm={6} md={3}>
-                    <FooterSection title="Support">
+                    <FooterSection title="Hỗ Trợ">
                         <Typography>
                             <Link href="#" underline="hover" color="inherit">
-                                FAQ
+                                Câu Hỏi Thường Gặp
                             </Link>
                             <br />
                             <Link href="#" underline="hover" color="inherit">
-                                Contact Us
+                                Liên Hệ Chúng Mình
                             </Link>
                             <br />
                             <Link href="#" underline="hover" color="inherit">
-                                Track Your Order
+                                Theo Dõi Đơn Hàng
                             </Link>
                             <br />
                             <Link href="#" underline="hover" color="inherit">
-                                Returns
+                                Đổi Trả
                             </Link>
                         </Typography>
                     </FooterSection>
@@ -63,22 +62,22 @@ const Footer = () => {
 
                 {/* Column 3: Policies */}
                 <Grid item xs={12} sm={6} md={3}>
-                    <FooterSection title="Policies">
+                    <FooterSection title="Chính Sách">
                         <Typography>
                             <Link href="#" underline="hover" color="inherit">
-                                Privacy Policy
+                                Chính Sách Bảo Mật
                             </Link>
                             <br />
                             <Link href="#" underline="hover" color="inherit">
-                                Terms of Service
+                                Điều Khoản Dịch Vụ
                             </Link>
                             <br />
                             <Link href="#" underline="hover" color="inherit">
-                                Shipping Policy
+                                Chính Sách Vận Chuyển
                             </Link>
                             <br />
                             <Link href="#" underline="hover" color="inherit">
-                                Refund Policy
+                                Chính Sách Hoàn Tiền
                             </Link>
                         </Typography>
                     </FooterSection>
@@ -86,16 +85,16 @@ const Footer = () => {
 
                 {/* Column 4: Address and Phone */}
                 <Grid item xs={12} sm={6} md={3}>
-                    <FooterSection title="Contact Us">
+                    <FooterSection title="Liên Hệ Chúng Mình">
                         <Typography>
-                            <strong>Address:</strong>
+                            <strong>Địa chỉ:</strong>
                             <br />
                             1234 Main St, Suite 100
                             <br />
-                            City, State, ZIP
+                            Thành phố, Tỉnh, Mã Bưu Điện
                             <br />
                             <br />
-                            <strong>Phone:</strong>
+                            <strong>Điện thoại:</strong>
                             <br />
                             (123) 456-7890
                         </Typography>

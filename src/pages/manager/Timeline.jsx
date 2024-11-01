@@ -282,6 +282,8 @@ const Timeline = () => {
                     {orders && orders.map((order) => (
                         <Box key={order.id} sx={{ width: '25%', margin: '1%', border: '1px solid #ccc', borderRadius: '4px', padding: '16px' }}>
                             <Typography variant="h6">ID: {order.id}</Typography>
+                            <Typography>Người gửi: {order.senderName}</Typography>
+                            <Typography>Địa chỉ gửi: {order.senderAddress}</Typography>
                             <Typography>Người nhận: {order.receiverName}</Typography>
                             <Typography>Địa chỉ nhận: {order.receiverAddress}</Typography>
                             <Button

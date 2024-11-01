@@ -18,6 +18,7 @@ import MainCard from 'components/MainCard';
 import { useNavigate } from 'react-router-dom';
 import orderServices from 'services/orderServices';
 import boxOptionServices from 'services/boxOptionServices';
+import { translateStatusToVietnamese } from 'utils/tools';
 
 const Order = () => {
     const navigate = useNavigate();
@@ -128,7 +129,7 @@ const Order = () => {
                                                     marginRight: '8px',
                                                 }}
                                             />
-                                            {order.isShipping}
+                                            {translateStatusToVietnamese(order.isShipping)}
                                         </Box>
                                     </TableCell>
                                     <TableCell>

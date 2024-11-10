@@ -48,14 +48,17 @@ const AllTimeline = () => {
     const getAllTimelines = async () => {
         let resOfTimeline = await timelineDeliveryServices.getTimelineDeliveryEnable();
         if (resOfTimeline.data.data) {
-            setTimelines(resOfTimeline.data.data);
+            let sortedTimelines = resOfTimeline.data.data.sort((a, b) => {
+                return new Date(b.startDay) - new Date(a.startDay);
+            });
+            setTimelines(sortedTimelines);
         }
     };
 
     const getVehicles = async () => {
         let resOfVehicle = await vehicleServices.getVehicle();
         if (resOfVehicle.data.data) {
-            setVehicles(resOfVehicle.data.data)
+            setVehicles(resOfVehicle.data.data);
         }
     }
 
@@ -69,13 +72,13 @@ const AllTimeline = () => {
     const translateStatus = (status) => {
         switch (status) {
             case "Pending":
-                return "Chưa bắt đầu";
+                return { label: "Chưa bắt đầu", color: "#FF9800" };
             case "Delivering":
-                return "Đang vận chuyển";
+                return { label: "Đang vận chuyển", color: "#3F51B5" };
             case "Completed":
-                return "Đã kết thúc";
+                return { label: "Đã kết thúc", color: "#4CAF50" };
             default:
-                return status;
+                return { label: status, color: "#000000" };
         }
     };
 
@@ -109,24 +112,31 @@ const AllTimeline = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {timelines && timelines.map((timeline) => (
-                            <TableRow key={timeline.id}>
-                                <TableCell>{timeline.id}</TableCell>
-                                <TableCell>{getVehicleName(timeline.vehicleId)}</TableCell>
-                                <TableCell>{getBranchName(timeline.branchId)}</TableCell>
-                                <TableCell>{formatDateTime(timeline.startDay)} - {formatDateTime(timeline.endDay)}</TableCell>
-                                <TableCell>{translateStatus(timeline.isCompleted)}</TableCell>
-                                <TableCell>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={() => handleViewDetail(timeline.id)}
-                                    >
-                                        Xem Chi Tiết
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {timelines && timelines.map((timeline) => {
+                            const statusData = translateStatus(timeline.isCompleted);
+                            return (
+                                <TableRow key={timeline.id}>
+                                    <TableCell>{timeline.id}</TableCell>
+                                    <TableCell>{getVehicleName(timeline.vehicleId)}</TableCell>
+                                    <TableCell>{getBranchName(timeline.branchId)}</TableCell>
+                                    <TableCell>{formatDateTime(timeline.startDay)} - {formatDateTime(timeline.endDay)}</TableCell>
+                                    <TableCell>
+                                        <span style={{ color: statusData.color }}>
+                                            {statusData.label}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={() => handleViewDetail(timeline.id)}
+                                        >
+                                            Xem Chi Tiết
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </TableContainer>

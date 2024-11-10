@@ -63,6 +63,9 @@ const CreateTimeline = () => {
     const [dialogAddOpen, setDialogAddOpen] = useState(false);
     const [selectedOrderDetailId, setSelectedOrderDetailId] = useState(null);
 
+    const [dialogUpdateOrder, setDialogUpdateOrder] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
+
     useEffect(() => {
         const fetchData = async () => {
             await getTimelineDelivery();
@@ -266,15 +269,8 @@ const CreateTimeline = () => {
             if (matchedOrder) {
                 let resOfAddOrderDetail = await deliveryServices.createOrderTimeline(orderTimelineCreateData);
                 if (resOfAddOrderDetail.data.data) {
-                    let allOrderDetailIdsInTimeline = orderDetailsForSelectedOrder.map(detail => detail.id);
-                    console.log(allOrderDetailIdsInTimeline)
-                    let allInTimeline = allOrderDetailIdsInTimeline.every(id => selectedOrderDetailIds.includes(id));
-                    console.log(allInTimeline)
                     toast.success('Đã thêm hộp vào xe thành công');
-                    if (allInTimeline) {
-                        await updateOrderStatus(matchedOrder.id);
-                        toast.success('Đã cập nhật trạng thái đơn hàng');
-                    }
+                    handleDialogAddClose();
                 }
             } else {
                 toast.error('Thêm hộp vào xe thất bại');
@@ -282,13 +278,24 @@ const CreateTimeline = () => {
         }));
     };
 
+    const handleUpdateOrderStatus = (orderId) => {
+        setSelectedOrderId(orderId);
+        setDialogUpdateOrder(true);
+    }
+
     const updateOrderStatus = async (orderId) => {
-        let matchedOrder = packedOrders.find(order => order.id === orderId);
-        if (matchedOrder) {
-            await orderServices.updateOrder(matchedOrder.id, {
-                ...matchedOrder,
-                isShipping: 'Delivering'
-            });
+        try {
+            let matchedOrder = packedOrders.find(order => order.id === orderId);
+            if (matchedOrder) {
+                await orderServices.updateOrder(matchedOrder.id, {
+                    ...matchedOrder,
+                    isShipping: 'Delivering'
+                });
+                toast.success('Cập nhật trạng thái đơn hàng thành công');
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error('Lỗi không cập nhật được trạng thái của đơn hàng');
         }
     };
 
@@ -332,10 +339,16 @@ const CreateTimeline = () => {
                                 variant="contained"
                                 color="primary"
                                 onClick={() => handledialogDetailOpen(order)}
-                                sx={{ mt: 2 }}
+                                sx={{ mt: 2, mr: 2 }}
                             >
                                 Xem Chi Tiết
                             </Button>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                sx={{ mt: 2 }}
+                                onClick={() => handleUpdateOrderStatus(order.id)}
+                            >Xác nhận xếp lịch</Button>
                         </Box>
                     ))}
                 </Box>
@@ -386,6 +399,7 @@ const CreateTimeline = () => {
 
             <MainCard sx={{ mt: 2 }}>
                 <Typography variant="h5" fontWeight={600}>Thông tin chuyến vận chuyển</Typography>
+                <Typography variant="h6" fontWeight={600}>Trạng thái: {timelineDelivery.isCompleted}</Typography>
                 {
                     vehicle ? (
                         <>
@@ -425,13 +439,17 @@ const CreateTimeline = () => {
 
                 <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
                     <Typography variant="h5" fontWeight={600}>Hộp trong xe</Typography>
-                    <Button
-                        variant="contained"
-                        color="success"
-                        onClick={handleDialogAddOpen}
-                    >
-                        Thêm hộp vào xe
-                    </Button>
+                    {
+                        timelineDelivery.isCompleted === 'Pending' && (
+                            <Button
+                                variant="contained"
+                                color="success"
+                                onClick={handleDialogAddOpen}
+                            >
+                                Thêm hộp vào xe
+                            </Button>
+                        )
+                    }
                 </Box>
 
                 {dialogAddOpen && (
@@ -537,7 +555,7 @@ const CreateTimeline = () => {
                                 <TableCell>Mã hộp</TableCell>
                                 <TableCell>Thể tích hộp</TableCell>
                                 <TableCell>Trạng Thái</TableCell>
-                                <TableCell>Hành động</TableCell>
+                                <TableCell></TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -551,15 +569,20 @@ const CreateTimeline = () => {
                                             <TableCell>{orderInfo ? orderInfo.boxOptionId : 'N/A'}</TableCell>
                                             <TableCell>{orderInfo ? `${orderInfo.boxOption.volume} lít` : 'N/A'}</TableCell>
                                             <TableCell>{orderItem.isComplete}</TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    variant="contained"
-                                                    color="error"
-                                                    onClick={() => handleDeleteOrderTimeline(orderItem)}
-                                                >
-                                                    Bỏ hộp khỏi xe
-                                                </Button>
-                                            </TableCell>
+                                            {
+                                                timelineDelivery.isCompleted === 'Pending' && (
+                                                    <TableCell>
+                                                        <Button
+                                                            variant="contained"
+                                                            color="error"
+                                                            onClick={() => handleDeleteOrderTimeline(orderItem)}
+                                                        >
+                                                            Bỏ hộp khỏi xe
+                                                        </Button>
+                                                    </TableCell>
+                                                )
+                                            }
+
                                         </TableRow>
                                     );
                                 })
@@ -568,6 +591,22 @@ const CreateTimeline = () => {
                     </Table>
                 </TableContainer>
             </MainCard>
+
+            <Dialog open={dialogUpdateOrder} onClose={() => setDialogUpdateOrder(false)}>
+                <DialogTitle>Xác nhận xếp lịch vận chuyển</DialogTitle>
+                <DialogContent>
+                    <Typography>Bạn chắc chắn muốn xác nhận đã sắp xếp lịch vận chuyển:</Typography>
+
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDialogUpdateOrder(false)} color="error">
+                        Hủy
+                    </Button>
+                    <Button onClick={() => updateOrderStatus(selectedOrderId)} color="success">
+                        Xác nhận
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box >
     );
 };

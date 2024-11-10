@@ -68,7 +68,6 @@ const Timeline = () => {
     const [selectedEndPoint, setSelectedEndPoint] = useState(null);
 
     const [vehicles, setVehicles] = useState([]);
-    const [availableVehicles, setAvailableVehicles] = useState([]);
     const [timelineDelivery, setTimelineDelivery] = useState([]);
 
     const [selectedVehicle, setSelectedVehicle] = useState("");
@@ -91,10 +90,6 @@ const Timeline = () => {
         setBranches(sampleBranch);
         fetchData();
     }, []);
-
-    useEffect(() => {
-        filterAvailableVehicles(vehicles);
-    }, [timelineDelivery, vehicles]);
 
     useEffect(() => {
         if (selectedStartPoint && selectedEndPoint && selectedStartPoint === selectedEndPoint) {
@@ -148,15 +143,6 @@ const Timeline = () => {
         let resOfVehicle = await vehicleServices.getVehicle();
         if (resOfVehicle) {
             setVehicles(resOfVehicle.data.data);
-            filterAvailableVehicles(resOfVehicle.data.data);
-        }
-    };
-
-    const filterAvailableVehicles = (fetchedVehicles) => {
-        if (timelineDelivery) {
-            let usedVehicleIds = new Set(timelineDelivery.map(timeline => timeline.vehicleId));
-            let filteredVehicles = fetchedVehicles.filter(vehicle => !usedVehicleIds.has(vehicle.id));
-            setAvailableVehicles(filteredVehicles);
         }
     };
 
@@ -419,7 +405,7 @@ const Timeline = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {availableVehicles && availableVehicles.map(vehicle => (
+                                {vehicles && vehicles.map(vehicle => (
                                     <TableRow key={vehicle.id}>
                                         <TableCell>
                                             <Radio

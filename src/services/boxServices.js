@@ -34,7 +34,7 @@ const updateBox = async (id, updatedBox) => {
 }
 
 const deleteBox = async (id) => {
-  return await config.delete(`/api/v1/Box/${id}`, { headers: authHeader() });
+  return await config.delete(`/api/v1/Box?id=${id}`, { headers: authHeader() });
 }
 
 export default {

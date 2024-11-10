@@ -15,7 +15,11 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    IconButton,
+    TextField,
 } from '@mui/material';
+
+import { CloseOutlined, DeleteOutline } from '@mui/icons-material';
 import MainCard from 'components/MainCard';
 import { useNavigate, useParams } from 'react-router-dom';
 import orderServices from 'services/orderServices';
@@ -23,6 +27,7 @@ import koiFishServices from 'services/koiFishServices';
 import orderDetailServices from 'services/orderDetailServices';
 import boxOptionServices from 'services/boxOptionServices';
 import distanceServices from 'services/distanceServices';
+import { toast } from 'react-toastify';
 
 const OrderChecking = () => {
     const { slug } = useParams();
@@ -37,6 +42,20 @@ const OrderChecking = () => {
     const [openDialog, setOpenDialog] = useState(false);
     const [dialogAction, setDialogAction] = useState('');
 
+    const [open, setOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedOrder, setEditedOrder] = useState({
+        senderName: '',
+        senderAddress: '',
+        receiverName: '',
+        receiverPhone: '',
+        receiverAddress: '',
+    });
+
+    const [newFish, setNewFish] = useState({ fishId: '', quantity: 1 });
+
     const statusMessages = {
         Pending: 'Đơn hàng mới',
         Approved: 'Đã xác nhận',
@@ -47,12 +66,12 @@ const OrderChecking = () => {
     };
 
     const statusColors = {
-        Pending: '#fff3e6',
-        Approved: '#e6f7ff',
-        Packed: '#fff7e6',
-        Delivering: '#e6fffa',
-        Completed: '#d9f7be',
-        Cancelled: '#ffccc7',
+        Pending: '#e69b4b',
+        Approved: '#4186f9',
+        Packed: '#ab935e',
+        Delivering: '#4a89d7',
+        Completed: '#79ff00',
+        Cancelled: '#ff072e',
     };
 
     useEffect(() => {
@@ -61,6 +80,13 @@ const OrderChecking = () => {
             if (resOfOrder) {
                 let orderData = resOfOrder.data.data;
                 setOrder(orderData);
+                setEditedOrder({
+                    senderName: orderData.senderName,
+                    senderAddress: orderData.senderAddress,
+                    receiverName: orderData.receiverName,
+                    receiverPhone: orderData.receiverPhone,
+                    receiverAddress: orderData.receiverAddress,
+                });
                 getOrderDetail(orderData.id);
             }
         };
@@ -127,87 +153,309 @@ const OrderChecking = () => {
         setOpenDialog(false);
     };
 
+    const handleImageClick = (url) => {
+        setSelectedImage(url);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setSelectedImage(null);
+    };
+
     const handleConfirmAction = async () => {
         if (dialogAction === 'accept') {
             await orderServices.updateOrder(order.id,
                 { ...order, isShipping: 'Approved' }
             );
+            toast.success('Xác nhận đơn hàng thành công')
         } else if (dialogAction === 'reject') {
             await orderServices.updateOrder(order.id,
                 { ...order, isShipping: 'Cancelled' }
             );
+            toast.success('Đã từ chối đơn hàng')
         }
         setOpenDialog(false);
         navigate('/sale/order');
     };
 
+    const status = order.isShipping || 'Pending';
+    const statusMessage = statusMessages[status] || 'Không xác định';
+    const statusColor = statusColors[status] || '#fff';
+
+    const handleEditClick = () => {
+        setIsEditing(!isEditing);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditedOrder({
+            ...editedOrder,
+            [name]: value,
+        });
+    };
+
+    const handleSaveClick = () => {
+        toast.success('Lưu thành công');
+        setIsEditing(false);
+    };
+
+    const handleSaveKoiFishClick = () => {
+        toast.success('Lưu thành công');
+        setIsEditing(false);
+    }
+
+    const handleAddFish = () => {
+        setKoiFist(prevFishes => [...prevFishes, { ...newFish }]);
+        setNewFish({ fishId: '', quantity: 1 });
+    };
+
+    const handleDeleteFish = (index) => {
+        setKoiFist(prevFishes => prevFishes.filter((_, i) => i !== index));
+    };
+
     return (
         <MainCard>
-            <Typography variant="h4" align="left" gutterBottom>
-                Trạng thái đơn hàng: {statusMessages[order.isShipping] || 'Không xác định'}
+            <Typography
+                variant="h5"
+                align="left"
+                gutterBottom
+                sx={{
+                    border: `2px solid ${statusColor}`,
+                    borderRadius: '10px',
+                    p: 2,
+                    width: 'fit-content',
+                    color: `${statusColor}`,
+                }}
+            >
+                {statusMessage}
             </Typography>
 
-            <Box sx={{ backgroundColor: statusColors[order.isShipping], padding: 2, borderRadius: 1, marginBottom: 2 }}>
-                <Typography variant="h6">Thông tin gửi nhận</Typography>
+            <Typography
+                variant="h5"
+                align="left"
+                gutterBottom
+                sx={{
+                    border: `2px solid #000`,
+                    borderRadius: '10px',
+                    p: 2,
+                    width: 'fit-content',
+                    color: `#000`,
+                }}
+            >
+                {order.isPayment ? 'Đã thanh toán' : 'Chưa thanh toán'}
+            </Typography>
+
+            <Box sx={{ backgroundColor: '#86b3b1', padding: 2, borderRadius: 1, marginBottom: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6">Thông tin gửi nhận</Typography>
+                    <Box>
+                        {!isEditing && (
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                sx={{ padding: '6px 16px' }}
+                                onClick={handleEditClick}
+                            >
+                                Chỉnh sửa
+                            </Button>
+                        )}
+                        {isEditing && (
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                sx={{ padding: '6px 16px' }}
+                                onClick={handleSaveClick}
+                            >
+                                Lưu
+                            </Button>
+                        )}
+                    </Box>
+                </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
                     <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'start' }}>
-                        <Typography variant="subtitle1">Người gửi: {order.senderName}</Typography>
-                        <Typography variant="subtitle1">Địa chỉ gửi: {order.senderAddress}</Typography>
+                        <Typography variant="subtitle1">Người gửi:</Typography>
+                        <TextField
+                            name="senderName"
+                            value={order.senderName || ''}
+                            onChange={handleInputChange}
+                            fullWidth
+                            variant="outlined"
+                            disabled={!isEditing}
+                            sx={{ marginBottom: 1 }}
+                        />
+                        <Typography variant="subtitle1">Địa chỉ gửi:</Typography>
+                        <TextField
+                            name="senderAddress"
+                            value={editedOrder.senderAddress || ''}
+                            onChange={handleInputChange}
+                            fullWidth
+                            variant="outlined"
+                            disabled={!isEditing}
+                        />
                     </Paper>
+
                     <Box sx={{ width: '2px', height: '100%', backgroundColor: 'grey.400', margin: '0 16px' }} />
+
                     <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'start' }}>
-                        <Typography variant="subtitle1">Người nhận: {order.receiverName} / {order.receiverPhone}</Typography>
-                        <Typography variant="subtitle1">Địa chỉ nhận: {order.receiverAddress}</Typography>
+                        <Typography variant="subtitle1">Người nhận:</Typography>
+                        <Box display='flex' justifyContent='space-between'>
+                            <TextField
+                                name="receiverName"
+                                value={editedOrder.receiverName || ''}
+                                onChange={handleInputChange}
+                                fullWidth
+                                variant="outlined"
+                                disabled={!isEditing}
+                                sx={{ marginBottom: 1, marginRight: 1 }}
+                            />
+                            <TextField
+                                name="receiverPhone"
+                                value={editedOrder.receiverPhone || ''}
+                                onChange={handleInputChange}
+                                fullWidth
+                                variant="outlined"
+                                disabled={!isEditing}
+                                sx={{ marginBottom: 1 }}
+                            />
+                        </Box>
+                        <Typography variant="subtitle1">Địa chỉ nhận:</Typography>
+                        <TextField
+                            name="receiverAddress"
+                            value={editedOrder.receiverAddress || ''}
+                            onChange={handleInputChange}
+                            fullWidth
+                            variant="outlined"
+                            disabled={!isEditing}
+                        />
                     </Paper>
                 </Box>
             </Box>
 
             <Divider sx={{ marginBottom: 2 }} />
 
-            <Box sx={{ backgroundColor: statusColors[order.isShipping], padding: 2, borderRadius: 1, marginBottom: 2 }}>
-                <Typography variant="h6">Thông tin cá Koi</Typography>
-                <Typography>Tổng số lượng cá: {totalQuantity}</Typography>
+            <Box sx={{ backgroundColor: '#86b3b1', padding: 2, borderRadius: 1, marginBottom: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                        <Typography variant="h6">Thông tin cá Koi</Typography>
+                        <Typography sx={{ fontWeight: 'bold' }}>Tổng số lượng cá: {totalQuantity}</Typography>
+                    </Box>
+                    <Box>
+                        {isEditing && (
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                sx={{ padding: '6px 16px', mr: 2 }}
+                                onClick={handleAddFish}
+                            >
+                                Thêm cá
+                            </Button>
+                        )}
+                        {!isEditing && (
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                sx={{ padding: '6px 16px' }}
+                                onClick={handleEditClick}
+                            >
+                                Chỉnh sửa
+                            </Button>
+                        )}
+                        {isEditing && (
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                sx={{ padding: '6px 16px' }}
+                                onClick={handleSaveKoiFishClick}
+                            >
+                                Lưu
+                            </Button>
+                        )}
+                    </Box>
+
+                </Box>
                 <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'start' }}>
-                    <Box display="flex" justifyContent="center" marginTop={2}>
-                        {boxOption.map((option, index) => (
-                            option.fishes.map((fish, fishIndex) => {
-                                const koi = koiFist.find(koi => koi.id === fish.fishId);
-                                return (
-                                    koi && (
-                                        <Box key={`${index}-${fishIndex}`} display="flex" justifyContent="space-between" marginTop={2}>
-                                            <Paper sx={{ padding: 2, flex: 1, margin: 1, textAlign: 'center' }}>
-                                                <Typography variant="subtitle1">Kích thước: {koi.size}</Typography>
-                                                <Typography variant="h5">Số lượng: {fish.quantity}</Typography>
-                                            </Paper>
-                                        </Box>
-                                    )
-                                );
-                            })
-                        ))}
-                    </Box>
-                    <Box display="flex" justifyContent="space-around" marginTop={2}>
-                        {[order.urlCer1, order.urlCer2, order.urlCer3, order.urlCer4].map((url, index) => (
-                            <Paper key={index} sx={{ width: '100px', height: '100px', padding: 1, textAlign: 'center' }}>
-                                <img src={url} alt={`Koi Fish ${index + 1}`} style={{ width: '100%', height: 'auto' }} />
-                            </Paper>
-                        ))}
-                    </Box>
+                    <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }}>Kích thước</TableCell>
+                                    <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }}>Số lượng</TableCell>
+                                    {isEditing && <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }}></TableCell>}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {
+                                    boxOption && boxOption.map((option, index) => (
+                                        option.fishes.map((fish, fishIndex) => {
+                                            let koi = koiFist.find(koi => koi.id === fish.fishId);
+                                            return (
+                                                koi && (
+                                                    <TableRow key={`${index}-${fishIndex}`}>
+                                                        <TableCell>
+                                                            <TextField
+                                                                value={koi.size}
+                                                                variant="outlined"
+                                                                size="small"
+                                                                fullWidth
+                                                                disabled={!isEditing}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <TextField
+                                                                value={fish.quantity}
+                                                                variant="outlined"
+                                                                size="small"
+                                                                fullWidth
+                                                                disabled={!isEditing}
+                                                                onChange={(e) => {
+                                                                    const updatedFish = [...koiFist];
+                                                                    updatedFish[index].quantity = e.target.value;
+                                                                    setKoiFist(updatedFish);
+                                                                }}
+                                                            />
+                                                        </TableCell>
+                                                        {isEditing && (
+                                                            <TableCell>
+                                                                <IconButton onClick={() => handleDeleteFish(index)}>
+                                                                    <DeleteOutline />
+                                                                </IconButton>
+                                                            </TableCell>
+                                                        )}
+                                                    </TableRow>
+                                                )
+                                            )
+                                        })
+                                    ))
+                                }
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
                 </Paper>
+                <Box display="flex" justifyContent="space-around" marginTop={2}>
+                    {[order.urlCer1, order.urlCer2, order.urlCer3, order.urlCer4].map((url, index) => (
+                        <Paper key={index} sx={{ width: '100px', height: '100px', padding: 1, textAlign: 'center' }}>
+                            <img src={url} alt={`Koi Fish ${index + 1}`} style={{ width: '100%', height: 'auto', cursor: 'pointer' }}
+                                onClick={() => handleImageClick(url)}
+                            />
+                        </Paper>
+                    ))}
+                </Box>
             </Box>
 
             <Divider sx={{ marginBottom: 2 }} />
 
-            <Box sx={{ backgroundColor: statusColors[order.isShipping], padding: 2, borderRadius: 1, marginBottom: 2 }}>
+            <Box sx={{ backgroundColor: '#86b3b1', padding: 2, borderRadius: 1, marginBottom: 2 }}>
                 <Typography variant="h6">Thông tin đóng gói</Typography>
                 <TableContainer component={Paper} sx={{ mt: 2 }}>
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Loại Hộp</TableCell>
-                                <TableCell align="right">Chi phí từ Nhật</TableCell>
-                                <TableCell align="right">Chi phí trong nước</TableCell>
-                                <TableCell align="right">Loại Cá Được Đóng Gói</TableCell>
-                                <TableCell align="right">Tổng thể tích cá/hộp</TableCell>
+                                <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }}>Loại Hộp</TableCell>
+                                <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Chi phí từ Nhật</TableCell>
+                                <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Chi phí trong nước</TableCell>
+                                <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Loại Cá Được Đóng Gói</TableCell>
+                                <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Tổng thể tích cá/hộp</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -247,15 +495,15 @@ const OrderChecking = () => {
 
             <Divider sx={{ marginBottom: 2 }} />
 
-            <Box sx={{ backgroundColor: statusColors[order.isShipping], padding: 2, borderRadius: 1, marginBottom: 2 }}>
+            <Box sx={{ backgroundColor: '#86b3b1', padding: 2, borderRadius: 1, marginBottom: 2 }}>
                 <Typography variant="h6">Thông tin chi phí</Typography>
                 <TableContainer component={Paper} sx={{ mt: 2 }}>
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Loại Chi Phí</TableCell>
-                                <TableCell align="right">Giá</TableCell>
-                                <TableCell align="right">Mô Tả</TableCell>
+                                <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }}>Loại Chi Phí</TableCell>
+                                <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Giá</TableCell>
+                                <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Mô Tả</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -306,6 +554,17 @@ const OrderChecking = () => {
                         Xác nhận
                     </Button>
                 </DialogActions>
+            </Dialog>
+
+            <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+                <DialogActions>
+                    <IconButton edge="end" color="inherit" onClick={handleClose} aria-label="close">
+                        <CloseOutlined />
+                    </IconButton>
+                </DialogActions>
+                <DialogContent>
+                    <img src={selectedImage} alt="Enlarged view" style={{ width: '100%', height: 'auto' }} />
+                </DialogContent>
             </Dialog>
         </MainCard>
     );

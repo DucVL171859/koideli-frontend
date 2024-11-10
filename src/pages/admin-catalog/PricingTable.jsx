@@ -95,10 +95,10 @@ const PricingTable = () => {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>#</TableCell>
-                                <TableCell>Loại hộp</TableCell>
-                                <TableCell>Giá</TableCell>
-                                <TableCell>Hành động</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>#</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Loại hộp</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Giá</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}></TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -123,10 +123,10 @@ const PricingTable = () => {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>#</TableCell>
-                                <TableCell>Khoảng cách</TableCell>
-                                <TableCell>Giá</TableCell>
-                                <TableCell>Hành động</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>#</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Khoảng cách</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Giá</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Hành động</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>

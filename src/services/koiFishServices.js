@@ -27,12 +27,12 @@ const createKoiFish = async () => {
   return await config.post(`/api/v1/KoiFish/{'koiFish'}`, { headers: authHeader() });
 }
 
-const updateKoiFish = async (id) => {
-  return await config.put(`/api/v1/KoiFish/${id}`, { headers: authHeader() });
+const updateKoiFish = async (id, updatedData) => {
+  return await config.put(`/api/v1/KoiFish?id=${id}`, updatedData, { headers: authHeader() });
 }
 
 const deleteKoiFish = async (id) => {
-  return await config.delete(`/api/v1/KoiFish/${id}`, { headers: authHeader() });
+  return await config.delete(`/api/v1/KoiFish?id=${id}`, { headers: authHeader() });
 }
 
 export default {

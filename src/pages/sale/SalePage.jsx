@@ -4,10 +4,10 @@ import MainCard from "components/MainCard"
 const SalePage = () => {
     return (
         <>
-            <MainCard title="Welcome Sale">
+            <MainCard title="Chào mừng nhân viên bán hàng">
                 <Typography variant="body2">
-                    Welcome Sale come to our Koi Fish Delivery Services.
-                    Have a nice day to begin your work.
+                    Chào mừng nhân viên bán hàng đến với hệ thống Koi Deli.
+                    Hãy có 1 ngày làm việc thật năng lượng.
                 </Typography>
             </MainCard>
         </>

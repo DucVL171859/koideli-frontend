@@ -32,6 +32,7 @@ import branchServices from "services/branchServices";
 import { toast } from "react-toastify";
 import deliveryServices from "services/deliveryServices";
 import ExistingTimelines from "./ExistingTimeline";
+import AllTimeline from "./AllTimeline";
 
 const sampleBranch = [
     { id: 1, name: 'Kho Cần Thơ', forward: 1, backward: null },
@@ -341,12 +342,17 @@ const Timeline = () => {
             </Dialog>
 
             <MainCard sx={{ mt: 2 }}>
-                <Typography variant="h5" fontWeight={600}>Lịch trình đã có</Typography>
+                <Typography variant="h5" fontWeight={600}>Tất cả lịch trình</Typography>
+                <AllTimeline />
+            </MainCard>
+
+            <MainCard sx={{ mt: 2 }}>
+                <Typography variant="h5" fontWeight={600}>Tìm lịch trình phù hợp</Typography>
                 <ExistingTimelines />
             </MainCard>
 
             <MainCard sx={{ mt: 2 }}>
-                <Typography variant="h5" fontWeight={600}>Lịch trình mới</Typography>
+                <Typography variant="h5" fontWeight={600}>Tạo lịch trình mới</Typography>
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start">
                     <Box sx={{ width: '45%' }}>
                         <Box display="flex" flexDirection="column" alignItems="flex-start">
@@ -407,9 +413,9 @@ const Timeline = () => {
                         <Table>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell></TableCell>
-                                    <TableCell>Tên xe</TableCell>
-                                    <TableCell>Sức chứa tối đa</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}></TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Tên xe</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Sức chứa tối đa</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>

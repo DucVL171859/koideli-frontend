@@ -5,10 +5,10 @@ const ManagerPage = () => {
 
     return (
         <>
-            <MainCard title="Welcome Manager">
+            <MainCard title="Chào mừng người quản lý">
                 <Typography variant="body2">
-                    Welcome Manager come to our Koi Fish Delivery Services.
-                    Have a nice day to begin your work.
+                    Chào mừng người quản lý đến với hệ thống Koi Deli.
+                    Hãy có 1 ngày làm việc thật năng lượng.
                 </Typography>
             </MainCard>
         </>

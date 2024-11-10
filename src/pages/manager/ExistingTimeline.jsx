@@ -287,13 +287,14 @@ const ExistingTimelines = () => {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell>Xe</TableCell>
-                            <TableCell>Các chuyến nhỏ</TableCell>
-                            <TableCell>Dự kiến bắt đầu - kết thúc</TableCell>
-                            <TableCell>Sức chứa hiện tại</TableCell>
-                            <TableCell>Đề xuất</TableCell>
-                            <TableCell>Trạng thái</TableCell>
-                            <TableCell>Hành động</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>ID</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Xe</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Các chuyến nhỏ</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Dự kiến bắt đầu - kết thúc</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Sức chứa hiện tại</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Đề xuất</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Trạng thái</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Hành động</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -303,6 +304,7 @@ const ExistingTimelines = () => {
                                     {
                                         vehicleTimeline.timelines.map(timeline => (
                                             <TableRow key={timeline.timelineId}>
+                                                <TableCell>{timeline.timelineId}</TableCell>
                                                 {timeline === vehicleTimeline.timelines[0] && (
                                                     <TableCell rowSpan={vehicleTimeline.timelines.length}>{vehicleTimeline.vehicle.vehicleName}</TableCell>
                                                 )}

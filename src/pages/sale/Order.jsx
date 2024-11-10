@@ -56,17 +56,17 @@ const Order = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'Pending':
-                return '#f0ad4e';
+                return '#e69b4b';
             case 'Approved':
-                return '#5cb85c';
+                return '#4186f9';
             case 'Packed':
-                return '#d9534f';
+                return '#ab935e';
             case 'Delivering':
-                return '#79bdcc';
+                return '#4a89d7';
             case 'Completed':
-                return '#5bc0de';
+                return '#79ff00';
             case 'Cancelled':
-                return '#d9534f';
+                return '#ff072e';
             default:
                 return 'gray';
         }
@@ -106,7 +106,6 @@ const Order = () => {
                             <TableRow>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người nhận</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Địa chỉ người nhận</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Số lượng cá</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Trạng thái</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Hành động</TableCell>
                             </TableRow>
@@ -116,7 +115,6 @@ const Order = () => {
                                 <TableRow key={order.id}>
                                     <TableCell>{`${order.receiverName} / ${order.receiverPhone}`}</TableCell>
                                     <TableCell>{order.receiverAddress}</TableCell>
-                                    <TableCell>{order.quantity}</TableCell>
                                     <TableCell>
                                         <Box display="flex" alignItems="center">
                                             <Box

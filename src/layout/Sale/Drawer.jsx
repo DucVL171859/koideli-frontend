@@ -12,9 +12,7 @@ const DrawerStyled = styled(Drawer)(() => ({
 const DrawerNav = [
     { title: 'Đơn hàng', route: '/sale/order' },
     { title: 'Lịch trình', route: '/sale/timeline-delivery' },
-    { title: 'Kho', route: '/sale/branch' },
     { title: 'Blogs', route: '/sale/blogs' },
-    { title: 'Tasks', route: '/sale/tasks' },
 ];
 
 const DrawerComponent = ({ open, onClose }) => {

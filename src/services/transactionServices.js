@@ -13,12 +13,17 @@ const getTransactionById = async (id) => {
     return await axios.get(`/api/v1/Transaction/${id}`, { headers: authHeader() });
 }
 
-const createTransaction = async () => {
-    return await axios.post(`/api/v1/Order`, { headers: authHeader() });
-}
+const createTransaction = async ({ totalAmount, paymentType, walletId }) => {
+  return await axios.post(
+    `/api/v1/Transaction`,
+    { totalAmount, paymentType, walletId }, // Correct payload structure
+    { headers: authHeader() } // Authorization headers
+  );
+};
+
 
 const deleteOrder = async (id) => {
-    return await axios.delete(`/api/v1/Order/${id}`, { headers: authHeader() });
+    return await axios.delete(`/api/v1/Transaction/${id}`, { headers: authHeader() });
 }
 
 export default {

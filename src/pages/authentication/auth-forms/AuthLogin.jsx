@@ -11,11 +11,11 @@ import {
   InputLabel,
 } from "@mui/material";
 import { VisibilityOutlined, VisibilityOffOutlined } from "@mui/icons-material";
-import authServices from "services/authServices"; // Your login service
-import userService from "services/userServices"; // Import the default export object
-
-import { toast } from "react-toastify"; // Import Toastify
-import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
+import authServices from "services/authServices";
+import userService from "services/userServices";
+import walletServices from "services/walletServices";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AuthLogin = () => {
   const navigate = useNavigate();
@@ -81,35 +81,53 @@ const AuthLogin = () => {
 
             // Extract relevant data like userId, role, etc.
             const id = profileData.id;
-            const role = profileData.role.roleName; // Assuming 'roleName' holds the user's role
+            const role = profileData.role.roleName;
 
             // Store user data and role in sessionStorage
             sessionStorage.setItem("userId", id);
             sessionStorage.setItem("role", role);
 
-            // Show success toast
-            toast.success("Login successful!");
+            // Fetch wallet data
+            try {
+              const walletResponse = await walletServices.getWallet();
+              if (walletResponse.data && walletResponse.data.data.length > 0) {
+                const walletInfo = walletResponse.data.data[0];
+                console.log(walletInfo);
+                const walletId = walletInfo.id; // Ensure walletId is correctly referenced
 
-            // Redirect based on the user's role
-            switch (role) {
-              case "User":
-                navigate("/");
-                break;
-              case "Sales Staff":
-                navigate("/sale/welcome");
-                break;
-              case "Delivery Staff":
-                navigate("/delivery");
-                break;
-              case "Manager":
-                navigate("/manager/welcome");
-                break;
-              case "Admin":
-                navigate("/admin/dashboard");
-                break;
-              default:
-                console.log("Role not recognized");
-                break;
+                // Store walletId in sessionStorage
+                sessionStorage.setItem("walletId", walletId);
+
+                // Show success toast
+                toast.success("Đăng nhập thành công");
+
+                // Redirect based on the user's role
+                switch (role) {
+                  case "User":
+                    navigate("/");
+                    break;
+                  case "Sales Staff":
+                    navigate("/sale/welcome");
+                    break;
+                  case "Delivery Staff":
+                    navigate("/delivery");
+                    break;
+                  case "Manager":
+                    navigate("/manager/welcome");
+                    break;
+                  case "Admin":
+                    navigate("/admin/dashboard");
+                    break;
+                  default:
+                    console.log("Role not recognized");
+                    break;
+                }
+              } else {
+                toast.error("Wallet not found.");
+              }
+            } catch (error) {
+              console.error("Error fetching wallet data:", error);
+              toast.error("Failed to retrieve wallet information.");
             }
           } else {
             toast.error("Failed to retrieve user profile.");
@@ -122,11 +140,9 @@ const AuthLogin = () => {
         setFormData((prevData) => ({
           ...prevData,
           errors: {
-            submit:
-              "Login failed. Please check your credentials and try again.",
+            submit: "Login failed. Please check your credentials and try again.",
           },
         }));
-        // Show error toast
         toast.error("Login failed. Please check your credentials.");
       }
     } catch (error) {
@@ -134,10 +150,9 @@ const AuthLogin = () => {
       setFormData((prevData) => ({
         ...prevData,
         errors: {
-          submit: "Login failed. Please check your credentials and try again.",
+          submit: "Login failed due to a server error.",
         },
       }));
-      // Show error toast
       toast.error("Login failed due to a server error.");
     }
   };
@@ -222,8 +237,6 @@ const AuthLogin = () => {
           </Grid>
         </Grid>
       </form>
-
-      
     </>
   );
 };

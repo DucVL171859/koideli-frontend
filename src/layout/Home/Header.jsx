@@ -88,11 +88,8 @@ const Header = () => {
         <Logo onClick={handleClickLogo} />
 
         <RightSection>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }} onClick={() => navigate("/services")}>
-            DỊCH VỤ
-          </NavButton>
-          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }} onClick={() => navigate("/blog")}>
-            BLOG
+          <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }} onClick={() => navigate("/")}>
+            TRANG CHỦ
           </NavButton>
           <NavButton sx={{ color: "#7d6e48", fontWeight: 600 }} onClick={() => navigate("/pricing")}>
             BẢNG GIÁ
@@ -137,7 +134,7 @@ const Header = () => {
                 <MenuItem onClick={() => navigate("/user-profile")}>
                   Hồ sơ cá nhân
                 </MenuItem>
-                <MenuItem onClick={() => navigate("/orders")}>
+                <MenuItem onClick={() => navigate("/user-profile?activeTab=orders")}>
                   Đơn hàng của tôi
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>

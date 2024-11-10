@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Card,
   Box,
@@ -48,11 +49,16 @@ import orderServices from "services/orderServices"; // Order API
 import orderDetailServices from "services/orderDetailServices"; // Order Detail API
 import boxOptionServices from "services/boxOptionServices"; // Box Option API
 import boxServices from "services/boxServices"; // Box Service
+import walletServices from "services/walletServices";
+import transactionServices from "services/transactionServices";
+
 import { PriceFormat } from "utils/tools";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const CreateOrderPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   // Phase 1: Receiver Info
   const [senderName, setSenderName] = useState("");
   const [senderAddress, setSenderAddress] = useState("");
@@ -90,6 +96,7 @@ const CreateOrderPage = () => {
     isComplete: "Pending",
   });
   const [totalFee, setTotalFee] = useState(0);
+  const [currentBalance, setCurrentBalance] = useState(0);
 
   // Additional state variables to store box option data after estimation
   const [boxOptions, setBoxOptions] = useState([]);
@@ -103,8 +110,34 @@ const CreateOrderPage = () => {
   const [isCreateOrderLoading, setIsCreateOrderLoading] = useState(false); // Create order loading
   // Dialog state variable for confirmation
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [userConfirmedBalance, setUserConfirmedBalance] = useState(false);
 
   const userId = sessionStorage.getItem("userId");
+
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      try {
+        const walletId = sessionStorage.getItem("walletId");
+        const walletResponse = await walletServices.getWallet(walletId);
+
+        if (
+          walletResponse.status === 200 &&
+          walletResponse.data.success &&
+          walletResponse.data.data.length > 0
+        ) {
+          const currentBalance = walletResponse.data.data[0].balance;
+          setCurrentBalance(currentBalance); // Update the balance state
+        } else {
+          toast.error("Không tìm thấy số dư hiện tại của ví.");
+        }
+      } catch (error) {
+        toast.error("Lỗi khi lấy số dư ví.");
+        console.error("Error fetching wallet balance:", error);
+      }
+    };
+
+    fetchWalletBalance();
+  }, []);
 
   // Fetch sender information from getProfile API
   useEffect(() => {
@@ -493,107 +526,152 @@ const CreateOrderPage = () => {
 
   // Confirm and create order
   const handleConfirmCreateOrder = () => {
-    setIsConfirmDialogOpen(false); // Close dialog
-    handleSubmitOrder(); // Proceed with order creation
+    setUserConfirmedBalance(true); // Mark as confirmed
+    setIsConfirmDialogOpen(false); // Close the dialog
+    handleSubmitOrder(); // Retry the order submission after confirmation
   };
 
-  // Submit Order
   const handleSubmitOrder = async () => {
     setIsCreateOrderLoading(true);
 
     try {
-      const orderPayload = {
-        userId,
-        senderName,
-        senderAddress,
-        receiverName,
-        receiverAddress,
-        receiverPhone,
-        totalFee,
-        isShipping: "Pending",
-        ...certificates,
-      };
+      // Step 1: Fetch wallet balance
+      const walletId = sessionStorage.getItem("walletId");
+      const walletResponse = await walletServices.getWalletById(walletId);
 
-      const orderResponse = await orderServices.createOrder(orderPayload);
-      const orderId = orderResponse.data.data.id;
+      if (
+        walletResponse.status === 200 &&
+        walletResponse.data.success &&
+        walletResponse.data.data.length > 0
+      ) {
+        const currentBalance = walletResponse.data.data[0].balance;
+        let isPayment = false;
 
-      if (!distanceId) {
-        toast.warn("Distance ID is missing. Calculate distance first.");
-        setIsCreateOrderLoading(false);
-        return;
-      }
+        // Step 2: Check if the balance is sufficient
+        if (currentBalance >= totalFee) {
+          // Deduct the total fee from the current balance
+          const updatedBalance = currentBalance - totalFee;
 
-      for (const boxOption of boxOptions) {
-        // Find corresponding total shipping cost for the current box option
-        const matchingBoxCost = boxOpShippingCost.find(
-          (boxCost) => boxCost.boxName === boxOption.boxName
-        );
+          // Step 3: Update wallet with the new balance
+          await walletServices.updateWallet(walletId, {
+            userId,
+            balance: updatedBalance,
+          });
+          toast.success("Số dư ví đã được trừ thành công!");
 
-        if (!matchingBoxCost) {
-          toast.error(`Shipping cost not found for box: ${boxOption.boxName}`);
+          // Step 4: Create a transaction record
+          await transactionServices.createTransaction({
+            totalAmount: totalFee,
+            paymentType: "OUT",
+            walletId: parseInt(walletId),
+          });
+          toast.success("Giao dịch đã được tạo thành công!");
+
+          isPayment = true; // Set isPayment to true if payment is successful
+        } else if (!userConfirmedBalance) {
+          // Open the dialog only once if the user hasn't confirmed
+          setIsConfirmDialogOpen(true);
+          setIsCreateOrderLoading(false);
+          return; // Exit function to prevent order creation without confirmation
+        }
+
+        // Step 5: Proceed with order creation if balance is sufficient or confirmed
+        const orderPayload = {
+          userId,
+          senderName,
+          senderAddress,
+          receiverName,
+          receiverAddress,
+          receiverPhone,
+          totalFee,
+          isShipping: "Pending",
+          isPayment, // Set isPayment based on payment status
+          ...certificates,
+        };
+
+        const orderResponse = await orderServices.createOrder(orderPayload);
+        const orderId = orderResponse.data.data.id;
+
+        if (!distanceId) {
+          toast.warn("Distance ID is missing. Calculate distance first.");
           setIsCreateOrderLoading(false);
           return;
         }
 
-        const totalBoxShippingFee =
-          shippingType === "Japan"
-            ? matchingBoxCost.shippingCost + matchingBoxCost.boxPrice
-            : matchingBoxCost.shippingCost;
+        // Create order details for each box option
+        for (const boxOption of boxOptions) {
+          const matchingBoxCost = boxOpShippingCost.find(
+            (boxCost) => boxCost.boxName === boxOption.boxName
+          );
 
-        const boxOptionPayload = {
-          boxes: [
-            {
-              boxId: boxOption.boxId,
-              fishes: boxOption.fishes.map((fish) => ({
-                fishId: fish.fishId,
-                quantity: fish.quantity,
-              })),
-            },
-          ],
-        };
+          if (!matchingBoxCost) {
+            toast.error(
+              `Shipping cost not found for box: ${boxOption.boxName}`
+            );
+            setIsCreateOrderLoading(false);
+            return;
+          }
 
-        const boxOptionResponse =
-          await boxOptionServices.createBoxOption(boxOptionPayload);
+          const totalBoxShippingFee =
+            shippingType === "Japan"
+              ? matchingBoxCost.shippingCost + matchingBoxCost.boxPrice
+              : matchingBoxCost.shippingCost;
 
-        if (
-          boxOptionResponse?.status === 200 &&
-          boxOptionResponse.data?.success &&
-          Array.isArray(boxOptionResponse.data.data) &&
-          boxOptionResponse.data.data.length > 0
-        ) {
-          const createdBoxOptionId = boxOptionResponse.data.data[0].id;
-
-          const orderDetailPayload = {
-            totalShippingFee: totalBoxShippingFee, // Set total shipping fee
-            boxOptionId: createdBoxOptionId,
-            orderId,
-            distanceId,
-            isComplete: "0",
+          const boxOptionPayload = {
+            boxes: [
+              {
+                boxId: boxOption.boxId,
+                fishes: boxOption.fishes.map((fish) => ({
+                  fishId: fish.fishId,
+                  quantity: fish.quantity,
+                })),
+              },
+            ],
           };
 
-          console.log("Order Detail Payload:", orderDetailPayload);
-
-          const orderDetailResponse =
-            await orderDetailServices.createOrderDetail(orderDetailPayload);
+          const boxOptionResponse =
+            await boxOptionServices.createBoxOption(boxOptionPayload);
 
           if (
-            orderDetailResponse?.status === 200 &&
-            orderDetailResponse.data?.success
+            boxOptionResponse?.status === 200 &&
+            boxOptionResponse.data?.success &&
+            Array.isArray(boxOptionResponse.data.data) &&
+            boxOptionResponse.data.data.length > 0
           ) {
-            toast.success(
-              `Order detail created successfully! Shipping Fee: ${totalBoxShippingFee.toLocaleString()} VND`
-            );
+            const createdBoxOptionId = boxOptionResponse.data.data[0].id;
+
+            const orderDetailPayload = {
+              totalShippingFee: totalBoxShippingFee,
+              boxOptionId: createdBoxOptionId,
+              orderId,
+              distanceId,
+              isComplete: "0",
+            };
+
+            const orderDetailResponse =
+              await orderDetailServices.createOrderDetail(orderDetailPayload);
+
+            if (
+              orderDetailResponse?.status === 200 &&
+              orderDetailResponse.data?.success
+            ) {
+              toast.success(`Đơn hàng được tạo thành công!`);
+              navigate("/user-profile?activeTab=orders");
+            } else {
+              toast.error("Lỗi khi tạo Chi tiết Đơn hàng.");
+              break;
+            }
           } else {
-            toast.error("Failed to create order detail.");
+            toast.error("Lỗi khi tạo Hộp cho Đơn hàng.");
             break;
           }
-        } else {
-          toast.error("Failed to create box option.");
-          break;
         }
+      } else {
+        toast.error("Không tìm thấy thông tin ví của bạn.");
       }
     } catch (error) {
       toast.error("Lỗi khi tạo đơn hàng.");
+      console.error("Error creating order:", error);
     }
 
     setIsCreateOrderLoading(false);
@@ -1084,6 +1162,28 @@ const CreateOrderPage = () => {
           </Box>
         </Grid>
 
+        <Grid item xs={12}>
+          <Box
+            sx={{
+              padding: 2,
+              textAlign: "center",
+              border: "2px solid #86250e",
+              borderRadius: 2,
+              boxShadow: 3,
+              marginBottom: 2,
+              backgroundColor: "#f5f5f5",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#86250e" }}
+            >
+              Số Dư Ví: <PriceFormat price={currentBalance} />
+            </Typography>
+          </Box>
+        </Grid>
+
         {/* Section 3: Upload Certificate */}
         <Grid item xs={12}>
           <Card
@@ -1205,7 +1305,7 @@ const CreateOrderPage = () => {
           </Card>
         </Grid>
 
-        {/* Confirmation Dialog */}
+        {/* Order Confirmation Dialog */}
         <Dialog
           open={isConfirmDialogOpen}
           onClose={handleCloseConfirmDialog}
@@ -1213,12 +1313,15 @@ const CreateOrderPage = () => {
           aria-describedby="confirm-dialog-description"
         >
           <DialogTitle id="confirm-dialog-title">
-            Xác nhận tạo đơn hàng
+            {currentBalance >= totalFee
+              ? "Xác nhận tạo đơn hàng"
+              : "Số dư không đủ"}
           </DialogTitle>
           <DialogContent>
             <DialogContentText id="confirm-dialog-description">
-              Bạn có chắc chắn muốn tạo đơn hàng với các thông tin đã nhập
-              không?
+              {currentBalance >= totalFee
+                ? "Bạn có chắc chắn muốn tạo đơn hàng với các thông tin đã nhập không?"
+                : "Số dư không đủ để thực hiện đơn hàng này. Bạn có muốn tiếp tục tạo đơn hàng không?"}
             </DialogContentText>
           </DialogContent>
           <DialogActions>

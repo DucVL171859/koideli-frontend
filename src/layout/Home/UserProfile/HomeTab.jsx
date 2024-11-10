@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import RechargeModal from "./rechargeModal";
 import userService from "services/userServices";
+import walletServices from "services/walletServices";
 import {
+  Typography,
+  Button,
+  Box,
+  CircularProgress,
   Table,
   TableBody,
   TableCell,
@@ -11,127 +15,128 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Pagination,
-  Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Rating,
 } from "@mui/material";
-import { formatDateTime, PriceFormat } from "utils/tools";
-import { Cancel, CheckCircle } from "@mui/icons-material";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import { PriceFormat } from "utils/tools";
 import "pages/css/style.css";
+import transactionServices from "services/transactionServices";
 
 const HomeTab = ({ initialProfile }) => {
   const [profile, setProfile] = useState(initialProfile || {});
   const [loading, setLoading] = useState(!initialProfile);
   const [showModal, setShowModal] = useState(false);
+  const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [loadingTransactions, setLoadingTransactions] = useState(true);
-  const [events, setEvents] = useState([]);
-  const [loadingTickets, setLoadingTickets] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [ticketPage, setTicketPage] = useState(1);
-  const [totalTicketPages, setTotalTicketPages] = useState(1);
-  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [feedback, setFeedback] = useState({
-    eventDetailID: "",
-    accountID: "",
-    rate: 5,
-    description: "",
-  });
+  const [activeTab, setActiveTab] = useState("wallet");
 
-  const token = localStorage.getItem("token");
-  const navigate = useNavigate();
+  const walletId = sessionStorage.getItem("walletId"); // Retrieve walletId from session storage
 
   useEffect(() => {
-    if (!initialProfile) {
-      const fetchProfile = async () => {
-        try {
+    const fetchWalletAndProfile = async () => {
+      try {
+        const walletData = await walletServices.getWallet();
+        if (walletData.data && walletData.data.data.length > 0) {
+          setWallet(walletData.data.data[0]);
+          setProfile((prevProfile) => ({
+            ...prevProfile,
+            id: walletData.data.data[0].userId,
+          }));
+        } else {
           const profileData = await userService.getProfileAPI();
-          setProfile(profileData.data); // Adjust to use 'data' object
-          setLoading(false);
-        } catch (error) {
-          console.error("Error fetching profile:", error);
-          setLoading(false);
-          toast.error("Error fetching profile");
-        }
-      };
+          setProfile(profileData.data);
 
-      fetchProfile();
-    }
-  }, [initialProfile, token]);
-
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const { transactions, pagination } = await getAllProfileTransactionAPI(
-          page,
-          10
-        );
-        setTransactions(transactions);
-        setTotalPages(pagination.TotalPages);
-        setLoadingTransactions(false);
-      } catch (error) {
-        console.error("Error fetching transactions:", error);
-        setLoadingTransactions(false);
-        toast.error("Error fetching transactions");
-      }
-    };
-
-    fetchTransactions();
-  }, [page]);
-
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const { tickets, pagination } = await getAllEventCheckInAPI(
-          ticketPage,
-          5
-        );
-        const eventMap = new Map();
-        tickets.forEach((ticket) => {
-          if (!eventMap.has(ticket.event.id)) {
-            eventMap.set(ticket.event.id, ticket);
+          if (profileData.data.id) {
+            const updatedWalletData = await walletServices.getWallet();
+            setWallet(
+              updatedWalletData.data.data.length > 0
+                ? updatedWalletData.data.data[0]
+                : null
+            );
           }
-        });
-        setEvents(Array.from(eventMap.values()));
-        setTotalTicketPages(pagination.TotalPages);
-        setLoadingTickets(false);
+        }
       } catch (error) {
-        console.error("Error fetching tickets:", error);
-        setLoadingTickets(false);
-        toast.error("Error fetching tickets");
+        console.error("Error fetching wallet or profile:", error);
+        toast.error("Error fetching wallet or profile");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchTickets();
-  }, [ticketPage]);
+    fetchWalletAndProfile();
+  }, []);
 
-  const handleWithdraw = () => {
-    alert("Withdraw functionality to be implemented");
-    toast.success("Withdraw request initiated");
+  useEffect(() => {
+    if (activeTab === "transactions") {
+      fetchTransactions();
+    }
+  }, [activeTab]);
+
+  const fetchTransactions = async () => {
+    try {
+      const transactionData = await transactionServices.getTransaction();
+      // Filter transactions based on walletId from sessionStorage
+      const filteredTransactions = transactionData.data.data.filter(
+        (transaction) => transaction.walletId === parseInt(walletId)
+      );
+      setTransactions(filteredTransactions);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      toast.error("Error fetching transactions");
+    }
+  };
+
+  const handleCreateWallet = async () => {
+    try {
+      const newWallet = await userService.createWalletAPI({
+        userId: profile.id,
+        walletType: "default",
+      });
+      setWallet(newWallet.data);
+      toast.success("Tạo Ví thành công!");
+    } catch (error) {
+      console.error("Error creating wallet:", error);
+      toast.error("Error creating wallet");
+    }
   };
 
   const handleRecharge = async (amount) => {
     if (!amount) {
-      toast.error("Please enter an amount");
+      toast.error("Vui lòng nhập số tiền");
       return;
     }
 
     try {
-      const response = await rechargeAPI({ amount }, token);
+      // Step 1: Create the transaction
+      const transactionResponse = await transactionServices.createTransaction({
+        totalAmount: amount,
+        paymentType: "IN",
+        walletId: parseInt(walletId),
+      });
 
-      if (response.data) {
-        window.location.href = response.data;
-        toast.success("Redirecting to payment...");
+      if (transactionResponse.data && transactionResponse.data.success) {
+        const transactionId = transactionResponse.data.data.id;
+
+        // Step 2: Use transactionId in the recharge API call
+        const rechargeResponse = await walletServices.rechargeAPI({
+          amount,
+          transactionId,
+        });
+
+        if (
+          rechargeResponse.isSuccess &&
+          rechargeResponse.data &&
+          rechargeResponse.data.payUrl
+        ) {
+          window.location.href = rechargeResponse.data.payUrl;
+          // window.open(rechargeResponse.data.payUrl, "_blank");
+          toast.success("Redirecting to payment...");
+
+          // Handle payment status as needed
+        } else {
+          toast.error("Unexpected response from the server");
+        }
       } else {
-        toast.error("Unexpected response from the server");
+        toast.error("Failed to create transaction");
       }
     } catch (error) {
       console.error("Error during recharge:", error);
@@ -144,119 +149,27 @@ const HomeTab = ({ initialProfile }) => {
   const handleClose = () => setShowModal(false);
   const handleShow = () => setShowModal(true);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeTicketPage = (event, newPage) => {
-    setTicketPage(newPage);
-  };
-
-  const handleFeedbackOpen = (event) => {
-    const eventEndDate = new Date(event.eventDetail.endDate);
-    const currentDate = new Date();
-    if (currentDate < eventEndDate) {
-      toast.warn("Sự kiện chưa kết thúc!!!");
-      return;
-    }
-    setSelectedEvent(event);
-    setFeedback({
-      eventDetailID: event.eventDetail.id,
-      accountID: event.transaction.accountID,
-      rate: 5,
-      description: "",
-    });
-    setFeedbackDialogOpen(true);
-  };
-
-  const handleViewFeedback = (event) => {
-    const eventEndDate = new Date(event.eventDetail.endDate);
-    const currentDate = new Date();
-    if (currentDate < eventEndDate) {
-      toast.warn("Sự kiện chưa kết thúc!!!");
-      return;
-    }
-    navigate(`/feedback/${event.event.id}`);
-  };
-
-  const handleFeedbackClose = () => {
-    setFeedbackDialogOpen(false);
-    setSelectedEvent(null);
-  };
-
-  const handleFeedbackChange = (e) => {
-    const { name, value } = e.target;
-    setFeedback((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleRatingChange = (event, newValue) => {
-    setFeedback((prev) => ({ ...prev, rate: newValue }));
-  };
-
-  const handleFeedbackSubmit = async () => {
-    try {
-      await postAddFeedbackAPI(feedback);
-      toast.success("Feedback submitted successfully");
-      handleFeedbackClose();
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
-      toast.error("Error submitting feedback");
-    }
-  };
-
-  const isFeedbackAllowed = (event) => {
-    const eventEndDate = new Date(event.eventDetail.endDate);
-    const currentDate = new Date();
-    const fiveDaysAfterEventEnd = new Date(
-      eventEndDate.getTime() + 3 * 24 * 60 * 60 * 1000
-    );
-    return currentDate <= fiveDaysAfterEventEnd;
-  };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div className="tab-content" id="myTabContent">
-      <div className="tab-pane fade active show" id="feed" role="tabpanel">
-        <div className="nav my-event-tabs mt-4" role="tablist">
-          <button
-            className="event-link active"
-            data-bs-toggle="tab"
-            data-bs-target="#wallet"
-            type="button"
-            role="tab"
-            aria-controls="wallet"
-            aria-selected="true"
-          >
-            <span>Ví của tôi</span>
-          </button>
-          <button
-            className="event-link"
-            data-bs-toggle="tab"
-            data-bs-target="#allTransactions"
-            type="button"
-            role="tab"
-            aria-controls="allTransactions"
-            aria-selected="false"
-          >
-            <span>Xem tất cả Giao dịch</span>
-          </button>
-          <button
-            className="event-link"
-            data-bs-toggle="tab"
-            data-bs-target="#feedback"
-            type="button"
-            role="tab"
-            aria-controls="feedback"
-            aria-selected="false"
-          >
-            <span>Xem đánh giá sự kiện đã tham gia</span>
-          </button>
-        </div>
+      <div className="nav my-event-tabs mt-4" role="tablist">
+        <button
+          className={`event-link ${activeTab === "wallet" ? "active" : ""}`}
+          onClick={() => setActiveTab("wallet")}
+          type="button"
+        >
+          Ví của tôi
+        </button>
+        <button
+          className={`event-link ${activeTab === "transactions" ? "active" : ""}`}
+          onClick={() => setActiveTab("transactions")}
+          type="button"
+        >
+          Giao Dịch
+        </button>
+      </div>
 
-        <div className="tab-content">
+      <div className="tab-content">
+        {activeTab === "wallet" && (
           <div
             className="tab-pane fade show active"
             id="wallet"
@@ -266,29 +179,48 @@ const HomeTab = ({ initialProfile }) => {
               <div className="col-md-12">
                 <div className="main-card mt-4">
                   <div className="card-top p-4">
-                    <div className="card-event-img">
-                      <img
-                        src={
-                          profile.urlAvatar || "https://via.placeholder.com/150"
-                        }
-                        alt="Profile Avatar"
-                      />
-                    </div>
                     <div className="card-event-dt">
-                      <h5>{profile.name || "User's Name"}</h5>
-                      <div className="evnt-time">
-                        Role: {profile.role.roleName}
-                      </div>
-                      <div className="evnt-time">Email: {profile.email}</div>
-                      <div className="evnt-time">
-                        Phone: {profile.phoneNumber}
-                      </div>
-                      <div className="evnt-time">Gender: {profile.gender}</div>
                       <div className="event-btn-group">
-                        <button className="esv-btn me-2" onClick={handleShow}>
-                          <i className="fa-solid fa-wallet me-2" />
-                          Nạp Tiền vào Ví
-                        </button>
+                        {loading ? (
+                          <CircularProgress />
+                        ) : wallet ? (
+                          <Box
+                            display="flex"
+                            flexDirection="column"
+                            alignItems="start"
+                          >
+                            <Typography variant="h6" gutterBottom>
+                              Số dư ví: <PriceFormat price={wallet.balance} />
+                            </Typography>
+                            <Button
+                              className="esv-btn me-2"
+                              startIcon={<AccountBalanceWalletIcon />}
+                              onClick={handleShow}
+                              sx={{
+                                backgroundColor: "#007bff",
+                                color: "white",
+                                "&:hover": { backgroundColor: "#0056b3" },
+                                fontWeight: "bold",
+                              }}
+                            >
+                              Nạp Tiền vào Ví
+                            </Button>
+                          </Box>
+                        ) : (
+                          <Button
+                            className="esv-btn me-2"
+                            startIcon={<AccountBalanceWalletIcon />}
+                            onClick={handleCreateWallet}
+                            sx={{
+                              backgroundColor: "#28a745",
+                              color: "white",
+                              "&:hover": { backgroundColor: "#218838" },
+                              fontWeight: "bold",
+                            }}
+                          >
+                            Tạo Ví
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -296,9 +228,89 @@ const HomeTab = ({ initialProfile }) => {
               </div>
             </div>
           </div>
+        )}
 
-          {/* Remaining tabs... */}
-        </div>
+        {activeTab === "transactions" && (
+          <div
+            className="tab-pane fade show active"
+            id="transactions"
+            role="tabpanel"
+          >
+            <div className="row">
+              <div className="col-md-12">
+                <div className="main-card mt-4">
+                  <div className="card-top p-4">
+                    <div className="card-event-dt">
+                      <h5>TẤT CẢ GIAO DỊCH</h5>
+                      <TableContainer component={Paper}>
+                        <Table
+                          sx={{ minWidth: 800 }}
+                          aria-label="transactions table"
+                        >
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>ID Giao Dịch</TableCell>
+                              <TableCell>Số Tiền</TableCell>
+                              <TableCell>Loại Giao Dịch</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {transactions.length > 0 ? (
+                              transactions.map((transaction) => (
+                                <TableRow key={transaction.id}>
+                                  <TableCell>{transaction.id}</TableCell>
+                                  <TableCell>
+                                    <Typography
+                                      style={{
+                                        color:
+                                          transaction.paymentType === "IN"
+                                            ? "green"
+                                            : "red",
+                                        fontWeight: "bold",
+                                      }}
+                                    >
+                                      {transaction.paymentType === "IN"
+                                        ? "+"
+                                        : "-"}{" "}
+                                      <PriceFormat
+                                        price={transaction.totalAmount}
+                                      />
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography
+                                      style={{
+                                        color:
+                                          transaction.paymentType === "IN"
+                                            ? "green"
+                                            : "red",
+                                        fontWeight: "bold",
+                                      }}
+                                    >
+                                      {transaction.paymentType === "IN"
+                                        ? "Nạp tiền"
+                                        : "Thanh Toán"}
+                                    </Typography>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            ) : (
+                              <TableRow>
+                                <TableCell colSpan={3} align="center">
+                                  Không có giao dịch nào.
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <RechargeModal
@@ -306,55 +318,6 @@ const HomeTab = ({ initialProfile }) => {
         handleClose={handleClose}
         handleRecharge={handleRecharge}
       />
-
-      <Dialog
-        open={feedbackDialogOpen}
-        onClose={handleFeedbackClose}
-        aria-labelledby="feedback-dialog-title"
-      >
-        <DialogTitle id="feedback-dialog-title">Create Feedback</DialogTitle>
-        <DialogContent>
-          <Rating
-            name="rate"
-            value={feedback.rate}
-            onChange={handleRatingChange}
-          />
-          <TextField
-            autoFocus
-            margin="dense"
-            id="description"
-            name="description"
-            label="Description"
-            type="text"
-            fullWidth
-            variant="standard"
-            value={feedback.description}
-            onChange={handleFeedbackChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleFeedbackClose}
-            sx={{
-              color: "white",
-              backgroundColor: "#450b00",
-              "&:hover": { backgroundColor: "#ff7f50" },
-            }}
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={handleFeedbackSubmit}
-            sx={{
-              color: "white",
-              backgroundColor: "#450b00",
-              "&:hover": { backgroundColor: "#ff7f50" },
-            }}
-          >
-            Gửi Đánh giá
-          </Button>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 };

@@ -14,17 +14,23 @@ import {
   Pagination,
   Button,
   Modal,
+  Chip,
 } from "@mui/material";
 import orderServices from "services/orderServices";
 import orderDetailServices from "services/orderDetailServices";
 import boxOptionServices from "services/boxOptionServices";
 import koiFishServices from "services/koiFishServices";
 import distanceServices from "services/distanceServices";
+import feedbackServices from "services/feedbackServices";
 import {
   getStatusColor,
   translateStatusToVietnamese,
   PriceFormat,
 } from "utils/tools";
+
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 
 // Modal styling
 const modalStyle = {
@@ -66,6 +72,15 @@ const OrdersPage = () => {
   };
 
   const statusColors = {
+    Pending: "#fff3e6",
+    Approved: "#e6f7ff",
+    Packed: "#fff7e6",
+    Delivering: "#e6fffa",
+    Completed: "#d9f7be",
+    Cancelled: "#ffccc7",
+  };
+
+  const PColors = {
     Pending: "#fff3e6",
     Approved: "#e6f7ff",
     Packed: "#fff7e6",
@@ -245,6 +260,13 @@ const OrdersPage = () => {
     return <div>Loading...</div>;
   }
 
+  // Function to handle feedback creation
+  const handleCreateFeedback = (orderId) => {
+    // Logic to create feedback for the specific order
+    console.log(`Creating feedback for order ID: ${orderId}`);
+    // Redirect or open feedback form here
+  };
+
   return (
     <div
       className="tab-pane fade active show"
@@ -268,22 +290,63 @@ const OrdersPage = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 8,
                   }}
                 >
                   {/* Order ID and Status */}
-                  <div style={{ flex: 1 }}>
-                    <Typography variant="h6">
+                  <div
+                    style={{
+                      flex: 1,
+                      padding: 16,
+                    }}
+                  >
+                    <Typography variant="h6" gutterBottom>
                       Mã đơn hàng: {order.id}
                     </Typography>
-                    <Typography
-                      variant="body1"
-                      style={{
-                        color: getStatusColor(order.isShipping),
-                        marginTop: 4,
-                      }}
-                    >
-                      {translateStatusToVietnamese(order.isShipping)}
-                    </Typography>
+
+                    <Box display="flex" alignItems="center" mt={1}>
+                      <LocalShippingIcon
+                        fontSize="small"
+                        style={{
+                          marginRight: 8,
+                          color: getStatusColor(order.isShipping),
+                        }}
+                      />
+                      <Typography
+                        variant="body1"
+                        style={{
+                          color: getStatusColor(order.isShipping),
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {translateStatusToVietnamese(order.isShipping)}
+                      </Typography>
+                    </Box>
+
+                    <Box display="flex" alignItems="center" mt={1}>
+                      {order.isPayment ? (
+                        <Chip
+                          icon={<CheckCircleIcon style={{ color: "green" }} />}
+                          label="Đã thanh toán"
+                          style={{
+                            backgroundColor: "#e0f7e0", // Light green background
+                            color: "green",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      ) : (
+                        <Chip
+                          icon={<CancelIcon style={{ color: "red" }} />}
+                          label="Chưa thanh toán"
+                          style={{
+                            backgroundColor: "#fdecea", // Light red background
+                            color: "red",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      )}
+                    </Box>
                   </div>
 
                   {/* Button for viewing details */}
@@ -298,6 +361,18 @@ const OrdersPage = () => {
                   >
                     Xem chi tiết
                   </Button>
+
+                  {/* Add Feedback Button for Completed Orders */}
+                  {order.isShipping === "Completed" && (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => handleCreateFeedback(order.id)}
+                      sx={{ marginLeft: 2 }}
+                    >
+                      Tạo phản hồi
+                    </Button>
+                  )}
                 </div>
 
                 {/* Order Details Section */}

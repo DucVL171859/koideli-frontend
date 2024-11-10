@@ -17,10 +17,6 @@ import {
     DialogActions,
     IconButton,
     TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
 } from '@mui/material';
 
 import { CloseOutlined, DeleteOutline } from '@mui/icons-material';
@@ -233,6 +229,21 @@ const OrderChecking = () => {
                 }}
             >
                 {statusMessage}
+            </Typography>
+
+            <Typography
+                variant="h5"
+                align="left"
+                gutterBottom
+                sx={{
+                    border: `2px solid #000`,
+                    borderRadius: '10px',
+                    p: 2,
+                    width: 'fit-content',
+                    color: `#000`,
+                }}
+            >
+                {order.isPayment ? 'Đã thanh toán' : 'Chưa thanh toán'}
             </Typography>
 
             <Box sx={{ backgroundColor: '#86b3b1', padding: 2, borderRadius: 1, marginBottom: 2 }}>

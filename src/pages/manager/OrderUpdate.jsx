@@ -156,7 +156,7 @@ const OrderUpdate = () => {
         if (dialogAction === 'update') {
             console.log(order)
             await orderServices.updateOrder(order.id,
-                { ...order, isShipping: 'Packed' }
+                { ...order, isShipping: 'Packed', isPayment: true }
             );
             toast.success('Xác nhận đơn hàng thành công')
         } else if (dialogAction === 'notUpdate') {
@@ -226,6 +226,21 @@ const OrderUpdate = () => {
                 }}
             >
                 {statusMessage}
+            </Typography>
+
+            <Typography
+                variant="h5"
+                align="left"
+                gutterBottom
+                sx={{
+                    border: `2px solid #000`,
+                    borderRadius: '10px',
+                    p: 2,
+                    width: 'fit-content',
+                    color: `#000`,
+                }}
+            >
+                {order.isPayment ? 'Đã thanh toán' : 'Chưa thanh toán'}
             </Typography>
 
             <Box sx={{ backgroundColor: '#86b3b1', padding: 2, borderRadius: 1, marginBottom: 2 }}>

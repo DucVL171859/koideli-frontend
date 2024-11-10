@@ -87,12 +87,12 @@ const UserAccount = () => {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>#</TableCell>
-                                <TableCell>Tên</TableCell>
-                                <TableCell>Email</TableCell>
-                                <TableCell>Số điện thoại</TableCell>
-                                <TableCell>Vai trò</TableCell>
-                                <TableCell>Actions</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>#</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Tên</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Email</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Số điện thoại</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}>Vai trò</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#272242', color: '#fff' }}></TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>

@@ -15,6 +15,8 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Stack,
+  Pagination,
 } from "@mui/material";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { PriceFormat } from "utils/tools";
@@ -28,8 +30,10 @@ const HomeTab = ({ initialProfile }) => {
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [activeTab, setActiveTab] = useState("wallet");
+  const [currentPage, setCurrentPage] = useState(1);
+  const transactionsPerPage = 5;
 
-  const walletId = sessionStorage.getItem("walletId"); // Retrieve walletId from session storage
+  const walletId = sessionStorage.getItem("walletId");
 
   useEffect(() => {
     const fetchWalletAndProfile = async () => {
@@ -44,7 +48,6 @@ const HomeTab = ({ initialProfile }) => {
         } else {
           const profileData = await userService.getProfileAPI();
           setProfile(profileData.data);
-
           if (profileData.data.id) {
             const updatedWalletData = await walletServices.getWallet();
             setWallet(
@@ -74,10 +77,9 @@ const HomeTab = ({ initialProfile }) => {
   const fetchTransactions = async () => {
     try {
       const transactionData = await transactionServices.getTransaction();
-      // Filter transactions based on walletId from sessionStorage
-      const filteredTransactions = transactionData.data.data.filter(
-        (transaction) => transaction.walletId === parseInt(walletId)
-      );
+      const filteredTransactions = transactionData.data.data
+        .filter((transaction) => transaction.walletId === parseInt(walletId))
+        .sort((a, b) => b.id - a.id); // Sort transactions in descending order
       setTransactions(filteredTransactions);
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -106,7 +108,6 @@ const HomeTab = ({ initialProfile }) => {
     }
 
     try {
-      // Step 1: Create the transaction
       const transactionResponse = await transactionServices.createTransaction({
         totalAmount: amount,
         paymentType: "IN",
@@ -115,8 +116,6 @@ const HomeTab = ({ initialProfile }) => {
 
       if (transactionResponse.data && transactionResponse.data.success) {
         const transactionId = transactionResponse.data.data.id;
-
-        // Step 2: Use transactionId in the recharge API call
         const rechargeResponse = await walletServices.rechargeAPI({
           amount,
           transactionId,
@@ -128,10 +127,7 @@ const HomeTab = ({ initialProfile }) => {
           rechargeResponse.data.payUrl
         ) {
           window.location.href = rechargeResponse.data.payUrl;
-          // window.open(rechargeResponse.data.payUrl, "_blank");
           toast.success("Redirecting to payment...");
-
-          // Handle payment status as needed
         } else {
           toast.error("Unexpected response from the server");
         }
@@ -148,6 +144,12 @@ const HomeTab = ({ initialProfile }) => {
 
   const handleClose = () => setShowModal(false);
   const handleShow = () => setShowModal(true);
+
+  const indexOfLastTransaction = currentPage * transactionsPerPage;
+  const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
+  const currentTransactions = transactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
+
+  const paginate = (event, value) => setCurrentPage(value);
 
   return (
     <div className="tab-content" id="myTabContent">
@@ -170,11 +172,7 @@ const HomeTab = ({ initialProfile }) => {
 
       <div className="tab-content">
         {activeTab === "wallet" && (
-          <div
-            className="tab-pane fade show active"
-            id="wallet"
-            role="tabpanel"
-          >
+          <div className="tab-pane fade show active" id="wallet" role="tabpanel">
             <div className="row">
               <div className="col-md-12">
                 <div className="main-card mt-4">
@@ -184,11 +182,7 @@ const HomeTab = ({ initialProfile }) => {
                         {loading ? (
                           <CircularProgress />
                         ) : wallet ? (
-                          <Box
-                            display="flex"
-                            flexDirection="column"
-                            alignItems="start"
-                          >
+                          <Box display="flex" flexDirection="column" alignItems="start">
                             <Typography variant="h6" gutterBottom>
                               Số dư ví: <PriceFormat price={wallet.balance} />
                             </Typography>
@@ -231,11 +225,7 @@ const HomeTab = ({ initialProfile }) => {
         )}
 
         {activeTab === "transactions" && (
-          <div
-            className="tab-pane fade show active"
-            id="transactions"
-            role="tabpanel"
-          >
+          <div className="tab-pane fade show active" id="transactions" role="tabpanel">
             <div className="row">
               <div className="col-md-12">
                 <div className="main-card mt-4">
@@ -243,10 +233,7 @@ const HomeTab = ({ initialProfile }) => {
                     <div className="card-event-dt">
                       <h5>TẤT CẢ GIAO DỊCH</h5>
                       <TableContainer component={Paper}>
-                        <Table
-                          sx={{ minWidth: 800 }}
-                          aria-label="transactions table"
-                        >
+                        <Table sx={{ minWidth: 800 }} aria-label="transactions table">
                           <TableHead>
                             <TableRow>
                               <TableCell>ID Giao Dịch</TableCell>
@@ -255,41 +242,29 @@ const HomeTab = ({ initialProfile }) => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {transactions.length > 0 ? (
-                              transactions.map((transaction) => (
+                            {currentTransactions.length > 0 ? (
+                              currentTransactions.map((transaction) => (
                                 <TableRow key={transaction.id}>
                                   <TableCell>{transaction.id}</TableCell>
                                   <TableCell>
                                     <Typography
                                       style={{
-                                        color:
-                                          transaction.paymentType === "IN"
-                                            ? "green"
-                                            : "red",
+                                        color: transaction.paymentType === "IN" ? "green" : "red",
                                         fontWeight: "bold",
                                       }}
                                     >
-                                      {transaction.paymentType === "IN"
-                                        ? "+"
-                                        : "-"}{" "}
-                                      <PriceFormat
-                                        price={transaction.totalAmount}
-                                      />
+                                      {transaction.paymentType === "IN" ? "+" : "-"}{" "}
+                                      <PriceFormat price={transaction.totalAmount} />
                                     </Typography>
                                   </TableCell>
                                   <TableCell>
                                     <Typography
                                       style={{
-                                        color:
-                                          transaction.paymentType === "IN"
-                                            ? "green"
-                                            : "red",
+                                        color: transaction.paymentType === "IN" ? "green" : "red",
                                         fontWeight: "bold",
                                       }}
                                     >
-                                      {transaction.paymentType === "IN"
-                                        ? "Nạp tiền"
-                                        : "Thanh Toán"}
+                                      {transaction.paymentType === "IN" ? "Nạp tiền" : "Thanh Toán"}
                                     </Typography>
                                   </TableCell>
                                 </TableRow>
@@ -304,6 +279,15 @@ const HomeTab = ({ initialProfile }) => {
                           </TableBody>
                         </Table>
                       </TableContainer>
+                      <Stack spacing={2} className="mt-3 mb-2" justifyContent="center" alignItems="center">
+                        <Pagination
+                          count={Math.ceil(transactions.length / transactionsPerPage)}
+                          page={currentPage}
+                          onChange={paginate}
+                          variant="outlined"
+                          shape="rounded"
+                        />
+                      </Stack>
                     </div>
                   </div>
                 </div>
@@ -313,11 +297,7 @@ const HomeTab = ({ initialProfile }) => {
         )}
       </div>
 
-      <RechargeModal
-        show={showModal}
-        handleClose={handleClose}
-        handleRecharge={handleRecharge}
-      />
+      <RechargeModal show={showModal} handleClose={handleClose} handleRecharge={handleRecharge} />
     </div>
   );
 };

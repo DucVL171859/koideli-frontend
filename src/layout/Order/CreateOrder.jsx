@@ -35,7 +35,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FileUploadIcon from "@mui/icons-material/UploadFile";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
-import PetsIcon from "@mui/icons-material/Pets"; // Alternative icon
+import SetMealIcon from "@mui/icons-material/SetMeal";
 
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"; // Firebase functions
 import { storage } from "api/firebase"; // Firebase config
@@ -52,7 +52,7 @@ import boxServices from "services/boxServices"; // Box Service
 import walletServices from "services/walletServices";
 import transactionServices from "services/transactionServices";
 
-import { PriceFormat } from "utils/tools";
+import { formatDistance, PriceFormat } from "utils/tools";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -70,6 +70,7 @@ const CreateOrderPage = () => {
   // Distance and shipping cost
   const [branchPoints, setBranchPoints] = useState([]);
   const [calculatedDistance, setCalculatedDistance] = useState(0);
+  const [calculatedDistanceinText, setCalculatedDistanceinText] = useState("");
   const [distanceId, setDistanceId] = useState(null);
   const [distanceShippingCost, setDistanceShippingCost] = useState(0); // Shipping cost from distanceAPI
   const [packingShippingCost, setPackingShippingCost] = useState(0);
@@ -316,6 +317,7 @@ const CreateOrderPage = () => {
 
         if (distanceMatrixResponse.success) {
           const calculatedDistance = distanceMatrixResponse.distance;
+          console.log(calculatedDistance);
           setCalculatedDistance(calculatedDistance);
 
           const distanceAPIResponse = await distanceServices.getDistance();
@@ -431,7 +433,7 @@ const CreateOrderPage = () => {
           additionalCost = 350000 * box.usageCount;
         }
 
-        const totalBoxCost = distanceCost + additionalCost;
+        const totalBoxCost = distanceCost;
 
         boxShippingCosts.push({
           boxName: box.boxName,
@@ -439,13 +441,13 @@ const CreateOrderPage = () => {
           boxPrice: box.price,
           shippingCost: totalBoxCost, // Set total shipping cost for this box
         });
-        console.log(boxShippingCosts);
-
+        console.log("Boxshipping cost", boxShippingCosts);
+        console.log("distance",additionalCost)
         calculatedTotalFee += totalBoxCost;
       });
 
-      setBoxOpShippingCost(boxShippingCosts); // Update state
-
+      setBoxOpShippingCost(boxShippingCosts);
+      console.log(calculatedTotalFee)
       calculateTotalShippingCost(calculatedTotalFee, packingCost);
 
       toast.success("Tính tổng chi phí vận chuyển thành công!");
@@ -458,10 +460,8 @@ const CreateOrderPage = () => {
 
   // Function to calculate the total cost
   const calculateTotalShippingCost = (boxShippingCost, packingCost) => {
-    const totalCost =
-      shippingType === "Japan"
-        ? boxShippingCost + packingCost
-        : boxShippingCost; // Adjust total cost based on shipping type
+    const totalCost = boxShippingCost + packingCost;
+    console.log(packingCost)
     setTotalFee(totalCost);
   };
 
@@ -854,7 +854,6 @@ const CreateOrderPage = () => {
         </Grid>
 
         {/* Section 2: Estimate */}
-        {/* Section 2: Estimate */}
         <Grid item xs={12}>
           <Card
             sx={{
@@ -982,7 +981,7 @@ const CreateOrderPage = () => {
                           (b) => b.boxName === box.boxName
                         );
                         const totalShippingFee =
-                          (shippingType !== "Vietnam" ? box.price : 0) +
+                          box.price +
                           (currentBoxShippingCost?.shippingCost || 0);
 
                         // Define colors for different boxes
@@ -1027,7 +1026,9 @@ const CreateOrderPage = () => {
                                   sx={{ color: boxColor }}
                                 >
                                   Tổng Phí của hộp:{" "}
-                                  <PriceFormat price={totalShippingFee} />
+                                  <strong>
+                                    <PriceFormat price={totalShippingFee} />
+                                  </strong>
                                 </Typography>
                               </Box>
 
@@ -1040,57 +1041,70 @@ const CreateOrderPage = () => {
                                     {shippingType === "Vietnam" ? (
                                       "0 đ"
                                     ) : (
-                                      <PriceFormat price={box.price} />
+                                      <strong>
+                                        <PriceFormat price={box.price} />
+                                      </strong>
                                     )}
                                   </Typography>
                                 </Box>
-
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={(box.price / totalShippingFee) * 100}
-                                  sx={{
-                                    height: 10,
-                                    backgroundColor: "#e0e0e0",
-                                    mb: 2,
-                                    "& .MuiLinearProgress-bar": {
-                                      backgroundColor: boxColor,
-                                    },
-                                  }}
-                                />
 
                                 <Box display="flex" alignItems="center" mb={1}>
                                   <LocalShippingIcon sx={{ color: boxColor }} />
                                   <Typography variant="body1" ml={1}>
                                     Phí Nội Địa:{" "}
                                     {currentBoxShippingCost ? (
-                                      <PriceFormat
-                                        price={
-                                          currentBoxShippingCost.shippingCost
-                                        }
-                                      />
+                                      <strong>
+                                        <PriceFormat
+                                          price={
+                                            currentBoxShippingCost.shippingCost
+                                          }
+                                        />
+                                      </strong>
                                     ) : (
                                       "Chưa tính toán"
                                     )}
                                   </Typography>
                                 </Box>
 
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={
-                                    currentBoxShippingCost
-                                      ? (currentBoxShippingCost.shippingCost /
-                                          totalShippingFee) *
-                                        100
-                                      : 0
-                                  }
-                                  sx={{
-                                    height: 10,
-                                    backgroundColor: "#e0e0e0",
-                                    "& .MuiLinearProgress-bar": {
-                                      backgroundColor: boxColor,
-                                    },
-                                  }}
-                                />
+                                <Box display="flex" alignItems="center" mb={1}>
+                                  <LocalShippingIcon sx={{ color: boxColor }} />
+                                  <Typography variant="body1" ml={1}>
+                                    Khoảng cách nội địa:{" "}
+                                    {calculatedDistance ? (
+                                      <strong>
+                                        {formatDistance(calculatedDistance)}
+                                      </strong>
+                                    ) : (
+                                      "Chưa tính toán"
+                                    )}
+                                  </Typography>
+                                </Box>
+
+                                {shippingType === "Vietnam" && (
+                                  <Box
+                                    display="flex"
+                                    alignItems="center"
+                                    mb={1}
+                                  >
+                                    <LocalShippingIcon
+                                      sx={{ color: boxColor }}
+                                    />
+                                    <Typography variant="body1" ml={1}>
+                                      Giá hộp (Nội địa):{" "}
+                                      {currentBoxShippingCost ? (
+                                        <strong>
+                                          <PriceFormat
+                                            price={
+                                              currentBoxShippingCost.boxPrice
+                                            }
+                                          />
+                                        </strong>
+                                      ) : (
+                                        "Chưa tính toán"
+                                      )}
+                                    </Typography>
+                                  </Box>
+                                )}
                               </Box>
 
                               {/* Fish Details */}
@@ -1118,10 +1132,9 @@ const CreateOrderPage = () => {
                                       alignItems="center"
                                       mb={1}
                                     >
-                                      <PetsIcon color="action" />
+                                      <SetMealIcon color="action" />
                                       <Typography variant="body2" ml={1}>
-                                        {fish.quantity}x {fish.fishDescription}{" "}
-                                        ({fish.fishSize} cm)
+                                        {fish.quantity} x Cá ({fish.fishSize} cm)
                                       </Typography>
                                     </Box>
                                   ))}

@@ -13,6 +13,14 @@ export const convertToGMT7 = (dateTimeString) => {
   return formattedDate;
 };
 
+export const formatDistance = (distanceValueInMeters) => {
+  const distanceInKm = Math.round(distanceValueInMeters);
+  return `${distanceInKm} km`;
+};
+
+
+
+
 // Function to format a date as DD/MM/YYYY
 export const formatDate = (inputDate) => {
   const date = new Date(inputDate);

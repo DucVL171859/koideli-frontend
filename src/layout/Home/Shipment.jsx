@@ -17,8 +17,8 @@ import {
   Divider,
 } from "@mui/material";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import Inventory2Icon from "@mui/icons-material/Inventory2";
+import SetMealIcon from "@mui/icons-material/SetMeal";
 import koiFishServices from "services/koiFishServices";
 import boxServices from "services/boxServices";
 import estimatePacking from "services/packingServices";
@@ -150,7 +150,7 @@ const ShipmentThree = () => {
                   align="center"
                   gutterBottom
                 >
-                  Ước tính chi phí
+                  ƯỚC TÍNH CHI PHÍ
                 </Typography>
                 <Typography
                   variant="subtitle1"
@@ -198,7 +198,18 @@ const ShipmentThree = () => {
                     variant={shippingPoint === "VN" ? "contained" : "outlined"}
                     color="primary"
                     onClick={() => setShippingPoint("VN")}
-                    sx={{ mx: 1 }}
+                    sx={{
+                      mx: 1,
+                      backgroundColor:
+                        shippingPoint === "VN" ? "#86250e" : "transparent", // Green when selected
+                      color: shippingPoint === "VN" ? "#fff" : "primary.main", // White text when selected
+                      "&:hover": {
+                        backgroundColor:
+                          shippingPoint === "VN"
+                            ? "#f54242"
+                            : "rgba(0,0,0,0.08)", // Darker green on hover if selected
+                      },
+                    }}
                   >
                     Gửi hàng trong nước
                   </Button>
@@ -206,7 +217,18 @@ const ShipmentThree = () => {
                     variant={shippingPoint === "JP" ? "contained" : "outlined"}
                     color="primary"
                     onClick={() => setShippingPoint("JP")}
-                    sx={{ mx: 1 }}
+                    sx={{
+                      mx: 1,
+                      backgroundColor:
+                        shippingPoint === "JP" ? "#86250e" : "transparent", // Blue when selected
+                      color: shippingPoint === "JP" ? "#fff" : "primary.main", // White text when selected
+                      "&:hover": {
+                        backgroundColor:
+                          shippingPoint === "JP"
+                            ? "#f54242"
+                            : "rgba(0,0,0,0.08)", // Darker blue on hover if selected
+                      },
+                    }}
                   >
                     Gửi hàng từ Nhật Bản
                   </Button>
@@ -247,7 +269,7 @@ const ShipmentThree = () => {
 
             <Box mt={4}>
               <Card sx={{ textAlign: "center", padding: "20px" }}>
-                <ShoppingCartIcon style={{ fontSize: 60, color: "#fa4318" }} />
+                <Inventory2Icon style={{ fontSize: 60, color: "#ff5722" }} />
                 <Typography variant="h5" fontWeight="bold" mt={2}>
                   Loại Hộp:{" "}
                   {packingResult.length > 0
@@ -268,7 +290,7 @@ const ShipmentThree = () => {
 
             <Box mt={4}>
               <Card sx={{ textAlign: "center", padding: "20px" }}>
-                <AttachMoneyIcon style={{ fontSize: 60, color: "#fa4318" }} />
+                <SetMealIcon style={{ fontSize: 60, color: "#ff5722" }} />
                 <Typography variant="h6" fontWeight="bold" mt={2}>
                   Số Cá có thể thêm vào
                 </Typography>
@@ -306,7 +328,7 @@ const ShipmentThree = () => {
                     <TableRow key={box.boxId}>
                       <TableCell>{box.boxName}</TableCell>
                       <TableCell align="right">
-                        {box.price.toLocaleString()} VND
+                        <PriceFormat price={box.price} />
                       </TableCell>
                       <TableCell align="right">
                         {box.fishes.map((fish) => (

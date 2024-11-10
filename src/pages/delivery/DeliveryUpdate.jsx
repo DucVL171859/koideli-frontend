@@ -41,30 +41,21 @@ const getStatusLabel = (status) => {
 };
 
 const StatusCircle = ({ status }) => {
-  let color;
-  switch (status) {
-    case "Pending":
-      color = "#b3b37e";
-      break;
-    case "Delivering":
-      color = "#66cbec";
-      break;
-    case "Completed":
-      color = "#66ec9e";
-      break;
-    default:
-      color = "gray";
-  }
+  const colorMap = {
+    Pending: "#b3b37e",
+    Delivering: "#66cbec",
+    Completed: "#66ec9e",
+  };
 
   return (
-    <span
-      style={{
+    <Box
+      sx={{
         display: "inline-block",
-        width: "12px",
-        height: "12px",
+        width: 12,
+        height: 12,
         borderRadius: "50%",
-        backgroundColor: color,
-        marginRight: "5px",
+        backgroundColor: colorMap[status] || "gray",
+        marginRight: 1,
       }}
     />
   );
@@ -86,12 +77,11 @@ const Timeline = () => {
       await getExistingTimelines();
       await getVehicles();
     };
-
     fetchData();
   }, []);
 
   const getExistingTimelines = async () => {
-    let res = await timelineDeliveryServices.getTimelineDeliveryEnable();
+    const res = await timelineDeliveryServices.getTimelineDeliveryEnable();
     if (res.data.data) {
       setExistingTimelines(res.data.data);
       setFilteredTimelines(res.data.data);
@@ -99,14 +89,14 @@ const Timeline = () => {
   };
 
   const getVehicles = async () => {
-    let res = await vehicleServices.getVehicle();
+    const res = await vehicleServices.getVehicle();
     if (res.data.data) {
       setVehicles(res.data.data);
     }
   };
 
   const getBranches = async () => {
-    let res = await branchServices.getBranch();
+    const res = await branchServices.getBranch();
     if (res.data.data) {
       setBranches(res.data.data);
     }
@@ -137,11 +127,12 @@ const Timeline = () => {
 
   const handleUpdateTimelineStatus = async () => {
     try {
-      const res = await deliveryServices.updateTimelineStatus(selectedTimelineId);
+      const res =
+        await deliveryServices.updateTimelineStatus(selectedTimelineId);
       if (res) {
-        toast.success("Timeline status updated successfully!");
+        toast.success("Lịch Trình cập nhật thành công!");
         setConfirmDialogOpen(false);
-        getExistingTimelines(); // Refresh timelines after updating
+        getExistingTimelines();
       } else {
         toast.error("Failed to update timeline status.");
       }
@@ -151,18 +142,14 @@ const Timeline = () => {
   };
 
   return (
-    <div>
-      <Typography variant="h3" alignItems-center gutterBottom>
+    <Box p={4}>
+      <Typography variant="h4" fontWeight="bold" gutterBottom color="primary">
         Quản lý Lịch trình Vận chuyển
       </Typography>
-      
-      <FormControl margin="normal" sx={{ width: "300px" }}>
-        <InputLabel id="branch-select-label">Chọn Chuyến Nhỏ</InputLabel>
-        <Select
-          labelId="branch-select-label"
-          value={selectedBranch}
-          onChange={handleBranchChange}
-        >
+
+      <FormControl margin="normal" fullWidth sx={{ maxWidth: 400 }}>
+        <InputLabel>Chọn Chuyến Nhỏ</InputLabel>
+        <Select value={selectedBranch} onChange={handleBranchChange}>
           <MenuItem value="">Tất cả</MenuItem>
           {branches.map((branch) => (
             <MenuItem key={branch.id} value={branch.id}>
@@ -172,12 +159,12 @@ const Timeline = () => {
         </Select>
       </FormControl>
 
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
+      <TableContainer component={Paper} sx={{ mt: 3, boxShadow: 3 }}>
         <Table>
-          <TableHead>
+          <TableHead sx={{ bgcolor: "#e0f7fa" }}>
             <TableRow>
+              <TableCell>Chuyến nhỏ</TableCell>
               <TableCell>Xe</TableCell>
-              <TableCell>Các chuyến nhỏ</TableCell>
               <TableCell>Dự kiến bắt đầu - kết thúc</TableCell>
               <TableCell>Thời điểm kết thúc</TableCell>
               <TableCell>Trạng thái</TableCell>
@@ -185,72 +172,52 @@ const Timeline = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredTimelines.map((timeline, index) => {
-              const vehicle = vehicles.find((v) => v.id === timeline.vehicleId) || {};
+            {filteredTimelines.map((timeline) => {
+              const branch =
+                branches.find((b) => b.id === timeline.branchId) || {};
+              const branchName = `${branch.startPoint} - ${branch.endPoint}`;
+
+              const vehicle =
+                vehicles.find((v) => v.id === timeline.vehicleId) || {};
               const vehicleName = vehicle.name || "Không xác định";
-
-              // Count how many times the vehicle appears
-              const vehicleOccurrences = filteredTimelines.filter(
-                (t) => t.vehicleId === timeline.vehicleId
-              ).length;
-
-              // Determine if this is the first occurrence of the vehicle
-              const isFirstOccurrence =
-                filteredTimelines.findIndex(
-                  (t) => t.vehicleId === timeline.vehicleId
-                ) === index;
 
               return (
                 <TableRow key={timeline.id}>
-                  {/* Render Vehicle name with rowspan on the first occurrence */}
-                  {isFirstOccurrence ? (
-                    <TableCell rowSpan={vehicleOccurrences}>
-                      {vehicleName}
-                    </TableCell>
-                  ) : null}
                   <TableCell>
-                    {
-                      branches.find(
-                        (branch) => branch.id === timeline.branchId
-                      )?.name
-                    }
+                    <Typography variant="body1" fontWeight="bold" color="textSecondary">
+                      {branchName}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>{vehicleName}</TableCell>
+                  <TableCell>
+                    {formatDateTime(timeline.startDay)} - {formatDateTime(timeline.endDay)}
                   </TableCell>
                   <TableCell>
-                    {formatDateTime(timeline.startDay)} -{" "}
-                    {formatDateTime(timeline.endDay)}
+                    {timeline.timeCompleted
+                      ? formatDateTime(timeline.timeCompleted)
+                      : "Chưa hoàn thành"}
                   </TableCell>
-                  <TableCell>
-                    {timeline.timeCompleted ? formatDateTime(timeline.timeCompleted) : "Chưa hoàn thành"}
-                  </TableCell>
-
                   <TableCell>
                     <StatusCircle status={timeline.isCompleted} />
                     {getStatusLabel(timeline.isCompleted)}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => handleViewDetail(timeline.id)}
-                      sx={{ mr: 1 }}
-                    >
-                      Xem Chi Tiết
-                    </Button>
-                    <Button
-                      variant="contained"
-                      sx={{
-                        color: "#ffffff",
-                        fontWeight: 700,
-                        bgcolor: "#f54242",
-                        "&:hover": {
-                          bgcolor: "#f57842",
-                          color: "#ffffff",
-                        },
-                      }}
-                      onClick={() => handleOpenUpdateDialog(timeline.id)}
-                    >
-                      Cập nhật Trạng thái
-                    </Button>
+                    <Box display="flex" gap={1}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleViewDetail(timeline.id)}
+                      >
+                        Xem Chi Tiết
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        onClick={() => handleOpenUpdateDialog(timeline.id)}
+                      >
+                        Cập nhật
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               );
@@ -270,27 +237,19 @@ const Timeline = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+          <Button onClick={() => setConfirmDialogOpen(false)} color="secondary">
             Hủy
           </Button>
           <Button
-            sx={{
-              color: "#ffffff",
-              fontWeight: 700,
-              bgcolor: "#f54242",
-              "&:hover": {
-                bgcolor: "#f57842",
-                color: "#ffffff",
-              },
-            }}
             onClick={handleUpdateTimelineStatus}
-            color="primary"
+            color="error"
+            variant="contained"
           >
             Xác nhận
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 };
 

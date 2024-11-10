@@ -15,6 +15,7 @@ import {
   Button,
   Modal,
   Chip,
+  TextField,
 } from "@mui/material";
 import orderServices from "services/orderServices";
 import orderDetailServices from "services/orderDetailServices";
@@ -22,6 +23,8 @@ import boxOptionServices from "services/boxOptionServices";
 import koiFishServices from "services/koiFishServices";
 import distanceServices from "services/distanceServices";
 import feedbackServices from "services/feedbackServices";
+import { toast } from "react-toastify";
+
 import {
   getStatusColor,
   translateStatusToVietnamese,
@@ -56,6 +59,12 @@ const OrdersPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [openModal, setOpenModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [openFeedbackModal, setOpenFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [existingFeedback, setExistingFeedback] = useState(null); // New state to store existing feedback
+  const [feedbackOrderIds, setFeedbackOrderIds] = useState(new Set());
+  const [fetchedFeedback, setFetchedFeedback] = useState([]);
+  const [feedbackId, setFeedbackId] = useState(null);
 
   const [orderDetails, setOrderDetails] = useState([]);
   const [boxOptions, setBoxOptions] = useState([]);
@@ -111,11 +120,52 @@ const OrdersPage = () => {
     fetchOrders();
   }, [itemsPerPage]);
 
-  // Paginate displayed orders
+  // Fetch orders and feedback data
   useEffect(() => {
+    const fetchOrdersAndFeedback = async () => {
+      try {
+        const ordersResponse = await orderServices.getOrder();
+        const feedbackResponse = await feedbackServices.getFeedback();
+
+        const fetchedOrders = ordersResponse?.data?.data || [];
+        const feedbackData = feedbackResponse?.data || [];
+        setFetchedFeedback(feedbackData); // Save feedback data to state
+
+        // Extract relevant details for feedback orders with a valid description
+        const feedbackOrderDetails = feedbackData
+          .filter(
+            (feedback) =>
+              feedback.desciption && feedback.desciption.trim() !== ""
+          )
+          .map((feedback) => ({
+            orderId: feedback.orderId,
+            desciption: feedback.desciption,
+          }));
+
+        const feedbackOrderIdsSet = new Set(
+          feedbackOrderDetails.map((feedback) => feedback.orderId)
+        );
+
+        setOrders(fetchedOrders);
+        setTotalPages(Math.ceil(fetchedOrders.length / itemsPerPage));
+        setFeedbackOrderIds(feedbackOrderIdsSet);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Error loading data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrdersAndFeedback();
+  }, [itemsPerPage]);
+
+  // Paginate displayed orders in descending order
+  useEffect(() => {
+    const sortedOrders = [...orders].sort((a, b) => b.id - a.id); // Sort orders in descending order by id
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    setDisplayedOrders(orders.slice(startIndex, endIndex));
+    setDisplayedOrders(sortedOrders.slice(startIndex, endIndex)); // Set paginated and sorted orders
   }, [page, orders, itemsPerPage]);
 
   // Fetch order details for modal
@@ -260,13 +310,64 @@ const OrdersPage = () => {
     return <div>Loading...</div>;
   }
 
-  // Function to handle feedback creation
-  const handleCreateFeedback = (orderId) => {
-    // Logic to create feedback for the specific order
-    console.log(`Creating feedback for order ID: ${orderId}`);
-    // Redirect or open feedback form here
+  // Open feedback modal, setting up for create or update
+  const handleFeedbackButtonClick = (orderId) => {
+    setSelectedOrder(orderId);
+
+    const existingFeedback = fetchedFeedback.find(
+      (feedback) => feedback.orderId === orderId
+    );
+
+    if (existingFeedback) {
+      setFeedbackText(existingFeedback.desciption || ""); // Set existing feedback text
+      setFeedbackId(existingFeedback.id); // Store feedbackId for updating
+    } else {
+      setFeedbackText(""); // Clear if creating new feedback
+      setFeedbackId(null); // Reset feedbackId for new feedback creation
+    }
+
+    setOpenFeedbackModal(true);
   };
 
+  // Submit feedback (create or update based on existence of feedbackId)
+  const handleSubmitFeedback = async () => {
+    if (!feedbackText) {
+      toast.error("Vui lòng không để trống.");
+      return;
+    }
+
+    try {
+      if (feedbackId) {
+        // Update feedback using feedbackId
+        await feedbackServices.updateFeedback(feedbackId, {
+          desciption: feedbackText,
+        });
+        toast.success("Phản hồi đã được cập nhật thành công.");
+      } else {
+        // Create new feedback
+        await feedbackServices.createFeedback({
+          desciption: feedbackText,
+          orderId: selectedOrder,
+        });
+        toast.success("Phản hồi đã được tạo thành công.");
+        setFeedbackOrderIds((prev) => new Set(prev).add(selectedOrder)); // Update feedbackOrderIds with the new order ID
+      }
+
+      setOpenFeedbackModal(false);
+      setFeedbackText("");
+      setFeedbackId(null); // Clear feedbackId after submission
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      toast.error("Error submitting feedback.");
+    }
+  };
+
+  // Close modal
+  const handleCloseFeedbackModal = () => {
+    setOpenFeedbackModal(false);
+    setFeedbackText("");
+    setFeedbackId(null);
+  };
   return (
     <div
       className="tab-pane fade active show"
@@ -362,15 +463,16 @@ const OrdersPage = () => {
                     Xem chi tiết
                   </Button>
 
-                  {/* Add Feedback Button for Completed Orders */}
                   {order.isShipping === "Completed" && (
                     <Button
                       variant="outlined"
                       color="primary"
-                      onClick={() => handleCreateFeedback(order.id)}
+                      onClick={() => handleFeedbackButtonClick(order.id)}
                       sx={{ marginLeft: 2 }}
                     >
-                      Tạo phản hồi
+                      {feedbackOrderIds.has(order.id)
+                        ? "Cập nhật Phản hồi"
+                        : "Tạo Phản hồi"}
                     </Button>
                   )}
                 </div>
@@ -399,7 +501,6 @@ const OrdersPage = () => {
             />
           </Stack>
         </div>
-
         {/* Modal for Order Details */}
         <Modal open={openModal} onClose={handleCloseModal}>
           <Box sx={modalStyle} className="modal-content">
@@ -602,6 +703,31 @@ const OrdersPage = () => {
             ) : (
               <Typography>No order selected</Typography>
             )}
+          </Box>
+        </Modal>
+        {/* Feedback Modal */}
+        <Modal open={openFeedbackModal} onClose={handleCloseFeedbackModal}>
+          <Box sx={modalStyle}>
+            <Typography variant="h6" gutterBottom>
+              {feedbackOrderIds.has(selectedOrder)
+                ? "Cập nhật Phản hồi"
+                : "Tạo Phản hồi"}
+            </Typography>
+            <textarea
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              placeholder={existingFeedback || "Nhập phản hồi"} // Set placeholder to existing feedback or default
+              rows={4}
+              style={{ width: "100%", marginTop: "10px" }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSubmitFeedback}
+              sx={{ mt: 2 }}
+            >
+              Xác nhận
+            </Button>
           </Box>
         </Modal>
       </div>

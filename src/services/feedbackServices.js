@@ -19,26 +19,35 @@ const getFeedback = async () => {
   }
 };
 
-
 const getFeedbackById = async (id) => {
-  return await config.get(`/api/v1/Feedback/id?id=${id}`, { headers: authHeader() });
-}
+  return await config.get(`/api/v1/Feedback/id?id=${id}`, {
+    headers: authHeader(),
+  });
+};
 
 const getFeedbackEnable = async () => {
-  return await config.get('/api/v1/Feedback/enable', { headers: authHeader() });
-}
+  return await config.get("/api/v1/Feedback/enable", { headers: authHeader() });
+};
 
-const createFeedback = async () => {
-  return await config.post(`/api/v1/Feedback`, { headers: authHeader() });
-}
+const createFeedback = async ({ desciption, orderId }) => {
+  return await config.post(
+    `/api/v1/Feedback`,
+    { desciption, orderId },
+    { headers: authHeader() }
+  );
+};
 
 const updateFeedback = async (id, updatedData) => {
-  return await config.put(`/api/v1/Feedback?id=${id}`, updatedData, { headers: authHeader() });
-}
+  return await config.put(`/api/v1/Feedback?id=${id}`, updatedData, {
+    headers: authHeader(),
+  });
+};
 
 const deleteFeedback = async (id) => {
-  return await config.delete(`/api/v1/Feedback/${id}`, { headers: authHeader() });
-}
+  return await config.delete(`/api/v1/Feedback/${id}`, {
+    headers: authHeader(),
+  });
+};
 
 export default {
   getFeedback,
@@ -46,5 +55,5 @@ export default {
   getFeedbackEnable,
   createFeedback,
   updateFeedback,
-  deleteFeedback
-}
+  deleteFeedback,
+};

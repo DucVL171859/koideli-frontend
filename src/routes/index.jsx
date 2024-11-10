@@ -9,6 +9,7 @@ import CreateOrderRoutes from "./CreateOrder";
 import ProfileRoutes from "./ProfileRoutes";
 import DeliveryRoutes from "./DeliveryRoutes";
 import InvoiceRoutes from "./InvoiceRoutes"
+import PriceRoutes from "./PriceRoutes";
 
 const router = createBrowserRouter(
   [
@@ -21,7 +22,8 @@ const router = createBrowserRouter(
     CreateOrderRoutes,
     ProfileRoutes,
     DeliveryRoutes,
-    InvoiceRoutes
+    InvoiceRoutes,
+    PriceRoutes
   ],
   {
     basename: "/",

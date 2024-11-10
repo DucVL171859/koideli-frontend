@@ -10,15 +10,15 @@ const getVehicleById = async (id) => {
 }
 
 const createVehicle = async () => {
-    return await axios.post(`/api/v1/Order/{'vehicle'}`, { headers: authHeader() });
+    return await axios.post(`/api/v1/Vehicle`, { headers: authHeader() });
 }
 
-const updateVehicle = async (id) => {
-    return await axios.put(`/api/v1/Order/${id}`, { headers: authHeader() });
+const updateVehicle = async (vehicleId, updatedData) => {
+    return await axios.put(`/api/v1/Vehicle?id=${vehicleId}`, updatedData, { headers: authHeader() });
 }
 
-const deleteVehicle = async (id) => {
-    return await axios.delete(`/api/v1/Order/${id}`, { headers: authHeader() });
+const deleteVehicle = async (vehicleId) => {
+    return await axios.delete(`/api/v1/Vehicle?id=${vehicleId}`, { headers: authHeader() });
 }
 
 export default {

@@ -72,75 +72,69 @@ const AuthLogin = () => {
         const token = resOfLogin.token;
         sessionStorage.setItem("token", token);
 
-        // Now fetch the user profile using getProfileAPI
-        try {
-          const profileResponse = await userService.getProfileAPI();
+        // Fetch the user profile using getProfileAPI
+        const profileResponse = await userService.getProfileAPI();
+        if (profileResponse.success) {
+          const profileData = profileResponse.data;
+          const id = profileData.id;
+          const role = profileData.role.roleName;
+          sessionStorage.setItem("userId", id);
+          sessionStorage.setItem("role", role);
 
-          if (profileResponse.success) {
-            const profileData = profileResponse.data;
+          // Attempt to fetch wallet data based on userId
+          try {
+            const walletResponse = await walletServices.getWallet();
+            const walletData = walletResponse.data.find(
+              (wallet) => wallet.userId === id
+            );
 
-            // Extract relevant data like userId, role, etc.
-            const id = profileData.id;
-            const role = profileData.role.roleName;
-
-            // Store user data and role in sessionStorage
-            sessionStorage.setItem("userId", id);
-            sessionStorage.setItem("role", role);
-
-            // Fetch wallet data
-            try {
-              const walletResponse = await walletServices.getWallet();
-              if (walletResponse.data && walletResponse.data.data.length > 0) {
-                const walletInfo = walletResponse.data.data[0];
-                console.log(walletInfo);
-                const walletId = walletInfo.id; // Ensure walletId is correctly referenced
-
-                // Store walletId in sessionStorage
-                sessionStorage.setItem("walletId", walletId);
-
-                // Show success toast
-                toast.success("Đăng nhập thành công");
-
-                // Redirect based on the user's role
-                switch (role) {
-                  case "User":
-                    navigate("/");
-                    break;
-                  case "Sales Staff":
-                    navigate("/sale/welcome");
-                    break;
-                  case "Delivery Staff":
-                    navigate("/delivery");
-                    break;
-                  case "Manager":
-                    navigate("/manager/welcome");
-                    break;
-                  case "Admin":
-                    navigate("/admin/dashboard");
-                    break;
-                  default:
-                    console.log("Role not recognized");
-                    break;
-                }
-              } else {
-                toast.error("Wallet not found.");
-              }
-            } catch (error) {
-              console.error("Error fetching wallet data:", error);
-              toast.error("Failed to retrieve wallet information.");
+            if (walletData) {
+              const walletId = walletData.id;
+              sessionStorage.setItem("walletId", walletId);
+            } else {
+              console.warn(
+                "Wallet not found for this user. Proceeding without wallet data."
+              );
             }
-          } else {
-            toast.error("Failed to retrieve user profile.");
+          } catch (error) {
+            console.error("Error fetching wallet data:", error);
+            toast.warn(
+              "Wallet information could not be retrieved. Proceeding without it."
+            );
           }
-        } catch (error) {
-          console.error("Error fetching profile data:", error);
+
+          toast.success("Đăng nhập thành công");
+
+          // Redirect based on the user's role
+          switch (role) {
+            case "User":
+              navigate("/");
+              break;
+            case "Sales Staff":
+              navigate("/sale/welcome");
+              break;
+            case "Delivery Staff":
+              navigate("/delivery");
+              break;
+            case "Manager":
+              navigate("/manager/welcome");
+              break;
+            case "Admin":
+              navigate("/admin/dashboard");
+              break;
+            default:
+              console.log("Role not recognized");
+              break;
+          }
+        } else {
           toast.error("Failed to retrieve user profile.");
         }
       } else {
         setFormData((prevData) => ({
           ...prevData,
           errors: {
-            submit: "Login failed. Please check your credentials and try again.",
+            submit:
+              "Login failed. Please check your credentials and try again.",
           },
         }));
         toast.error("Login failed. Please check your credentials.");

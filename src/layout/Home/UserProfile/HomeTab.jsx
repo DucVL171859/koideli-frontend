@@ -37,25 +37,35 @@ const HomeTab = ({ initialProfile }) => {
 
   useEffect(() => {
     const fetchWalletAndProfile = async () => {
+      const userId = sessionStorage.getItem("userId"); // Retrieve userId from session storage
+  
       try {
+        // Fetch wallet data
         const walletData = await walletServices.getWallet();
-        if (walletData.data && walletData.data.data.length > 0) {
-          setWallet(walletData.data.data[0]);
+  
+        // Filter wallet data based on userId
+        const userWallet = walletData.data.data.find(
+          (wallet) => wallet.userId === userId
+        );
+  
+        if (userWallet) {
+          setWallet(userWallet);
           setProfile((prevProfile) => ({
             ...prevProfile,
-            id: walletData.data.data[0].userId,
+            id: userWallet.userId,
           }));
         } else {
+          // If wallet not found, fetch the user profile instead
           const profileData = await userService.getProfileAPI();
           setProfile(profileData.data);
-          if (profileData.data.id) {
-            const updatedWalletData = await walletServices.getWallet();
-            setWallet(
-              updatedWalletData.data.data.length > 0
-                ? updatedWalletData.data.data[0]
-                : null
-            );
-          }
+  
+          // Retry fetching wallet data after setting the profile
+          const updatedWalletData = await walletServices.getWallet();
+          const updatedUserWallet = updatedWalletData.data.data.find(
+            (wallet) => wallet.userId === profileData.data.id
+          );
+  
+          setWallet(updatedUserWallet || null);
         }
       } catch (error) {
         console.error("Error fetching wallet or profile:", error);
@@ -64,9 +74,10 @@ const HomeTab = ({ initialProfile }) => {
         setLoading(false);
       }
     };
-
+  
     fetchWalletAndProfile();
   }, []);
+  
 
   useEffect(() => {
     if (activeTab === "transactions") {

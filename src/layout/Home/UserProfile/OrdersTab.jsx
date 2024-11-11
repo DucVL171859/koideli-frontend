@@ -120,22 +120,32 @@ const OrdersPage = () => {
     fetchOrders();
   }, [itemsPerPage]);
 
-  // Fetch orders and feedback data
+  // Fetch orders and feedback data for specific user
   useEffect(() => {
     const fetchOrdersAndFeedback = async () => {
+      setLoading(true);
+      const userId = sessionStorage.getItem("userId"); // Retrieve userId from session storage
+
       try {
         const ordersResponse = await orderServices.getOrder();
         const feedbackResponse = await feedbackServices.getFeedback();
 
         const fetchedOrders = ordersResponse?.data?.data || [];
         const feedbackData = feedbackResponse?.data || [];
-        setFetchedFeedback(feedbackData); // Save feedback data to state
+        setFetchedFeedback(feedbackData);
 
-        // Extract relevant details for feedback orders with a valid description
+        // Filter orders by userId
+        const userOrders = fetchedOrders.filter(
+          (order) => order.userId === userId
+        );
+
+        // Extract feedback information for the user's orders
         const feedbackOrderDetails = feedbackData
           .filter(
             (feedback) =>
-              feedback.desciption && feedback.desciption.trim() !== ""
+              feedback.desciption &&
+              feedback.desciption.trim() !== "" &&
+              userOrders.some((order) => order.id === feedback.orderId)
           )
           .map((feedback) => ({
             orderId: feedback.orderId,
@@ -146,8 +156,8 @@ const OrdersPage = () => {
           feedbackOrderDetails.map((feedback) => feedback.orderId)
         );
 
-        setOrders(fetchedOrders);
-        setTotalPages(Math.ceil(fetchedOrders.length / itemsPerPage));
+        setOrders(userOrders);
+        setTotalPages(Math.ceil(userOrders.length / itemsPerPage));
         setFeedbackOrderIds(feedbackOrderIdsSet);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -487,7 +497,7 @@ const OrdersPage = () => {
               </div>
             ))
           ) : (
-            <Typography>No orders found</Typography>
+            <Typography>Chưa có lịch sử đơn hàng.</Typography>
           )}
 
           <Stack spacing={2} className="pagination-controls mt-3 mb-2">

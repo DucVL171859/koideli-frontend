@@ -62,6 +62,7 @@ const Order = () => {
 
     const handleExecuteOrder = (slug) => {
         navigate(`/manager/order-checking/${slug}`);
+        console.log('ok')
     };
 
     const handleUpdateOrder = (slug) => {

@@ -541,10 +541,8 @@ const CreateOrderPage = () => {
 
       if (
         walletResponse.status === 200 &&
-        walletResponse.data.success &&
-        walletResponse.data.data.length > 0
-      ) {
-        const currentBalance = walletResponse.data.data[0].balance;
+        walletResponse.data.success      ) {
+        const currentBalance = walletResponse.data.data.balance;
         let isPayment = false;
 
         // Step 2: Check if the balance is sufficient

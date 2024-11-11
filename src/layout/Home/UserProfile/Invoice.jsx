@@ -51,10 +51,8 @@ const InvoicePage = () => {
       // Access the balance from the nested data structure
       if (
         walletResponse.status === 200 &&
-        walletResponse.data.success &&
-        walletResponse.data.data.length > 0
-      ) {
-        const currentBalance = walletResponse.data.data[0].balance;
+        walletResponse.data.success) {
+        const currentBalance = walletResponse.data.data.balance;
 
         // Step 2: Calculate the new balance by adding the transaction amount
         const transactionAmount = parseInt(invoiceData.amount) / 100;

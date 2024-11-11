@@ -129,15 +129,20 @@ const OrdersPage = () => {
       try {
         const ordersResponse = await orderServices.getOrder();
         const feedbackResponse = await feedbackServices.getFeedback();
+        console.log(ordersResponse);
 
         const fetchedOrders = ordersResponse?.data?.data || [];
+        console.log(fetchedOrders);
+
         const feedbackData = feedbackResponse?.data || [];
         setFetchedFeedback(feedbackData);
 
         // Filter orders by userId
         const userOrders = fetchedOrders.filter(
-          (order) => order.userId === userId
+          (order) => order.userId === parseInt(userId)
         );
+
+        console.log(userOrders);
 
         // Extract feedback information for the user's orders
         const feedbackOrderDetails = feedbackData

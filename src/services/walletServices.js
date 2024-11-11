@@ -10,7 +10,7 @@ const getWalletEnable = async (name) => {
 };
 
 const getWalletById = async (id) => {
-  return await config.get(`/api/v1/Wallet?id=${id}`, { headers: authHeader() });
+  return await config.get(`/api/v1/Wallet/id?id=${id}`, { headers: authHeader() });
 };
 
 const createWallet = async (walletData) => {

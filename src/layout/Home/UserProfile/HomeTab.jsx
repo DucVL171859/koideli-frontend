@@ -100,7 +100,7 @@ const HomeTab = ({ initialProfile }) => {
 
   const handleCreateWallet = async () => {
     try {
-      const newWallet = await userService.createWalletAPI({
+      const newWallet = await walletServices.createWallet({
         userId: profile.id,
         walletType: "default",
       });
@@ -195,7 +195,7 @@ const HomeTab = ({ initialProfile }) => {
                         ) : wallet ? (
                           <Box display="flex" flexDirection="column" alignItems="start">
                             <Typography variant="h6" gutterBottom>
-                              Số dư ví: <PriceFormat price={wallet.balance} />
+                            Số dư ví: <PriceFormat price={wallet?.balance || 0} />
                             </Typography>
                             <Button
                               className="esv-btn me-2"

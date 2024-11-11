@@ -13,9 +13,10 @@ const getWalletById = async (id) => {
   return await config.get(`/api/v1/Wallet?id=${id}`, { headers: authHeader() });
 };
 
-const createWallet = async () => {
-  return await config.post(`/api/v1/Wallet`, { headers: authHeader() });
+const createWallet = async (walletData) => {
+  return await config.post(`/api/v1/Wallet`, walletData, { headers: authHeader() });
 };
+
 
 const updateWallet = async (id, data) => {
   return await config.put(`/api/v1/Wallet?id=${id}`, data, { headers: authHeader() });

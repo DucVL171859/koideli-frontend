@@ -84,7 +84,7 @@ const AuthLogin = () => {
           // Attempt to fetch wallet data based on userId
           try {
             const walletResponse = await walletServices.getWallet();
-            const walletData = walletResponse.data.find(
+            const walletData = walletResponse.data.data.find(
               (wallet) => wallet.userId === id
             );
 

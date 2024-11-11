@@ -163,6 +163,7 @@ const Timeline = () => {
         <Table>
           <TableHead sx={{ bgcolor: "#e0f7fa" }}>
             <TableRow>
+              <TableCell>ID</TableCell>
               <TableCell>Chuyến nhỏ</TableCell>
               <TableCell>Xe</TableCell>
               <TableCell>Dự kiến bắt đầu - kết thúc</TableCell>
@@ -183,6 +184,7 @@ const Timeline = () => {
 
               return (
                 <TableRow key={timeline.id}>
+                  <TableCell>{timeline.id}</TableCell>
                   <TableCell>
                     <Typography variant="body1" fontWeight="bold" color="textSecondary">
                       {branchName}

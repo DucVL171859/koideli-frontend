@@ -27,7 +27,7 @@ const DeliveryRoutes = {
   element: <DeliverySection />,
   children: [
     {
-      path: "welcome",
+      path: "",
       element: <DeliveryPage />,
     },
     {

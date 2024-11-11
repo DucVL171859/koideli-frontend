@@ -158,7 +158,7 @@ const Timeline = () => {
       if (res) {
         toast.success("Timeline status updated successfully!");
         setConfirmDialogOpen(false);
-        fetchTimelines(); // Refresh timelines after updating
+        
       } else {
         toast.error("Failed to update timeline status.");
       }
@@ -189,6 +189,7 @@ const Timeline = () => {
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>ID</TableCell>
               <TableCell>Xe</TableCell>
               <TableCell>Các chuyến nhỏ</TableCell>
               <TableCell>Dự kiến bắt đầu - kết thúc</TableCell>
@@ -206,6 +207,7 @@ const Timeline = () => {
 
                 return (
                   <TableRow key={timeline.id}>
+                    <TableCell>{timeline.id}</TableCell>
                     <TableCell>{vehicle.name || "Không xác định"}</TableCell>
                     <TableCell>
                       {branches.find(

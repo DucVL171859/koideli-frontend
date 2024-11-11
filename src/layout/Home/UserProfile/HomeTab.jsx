@@ -92,6 +92,7 @@ const HomeTab = ({ initialProfile }) => {
         .filter((transaction) => transaction.walletId === parseInt(walletId))
         .sort((a, b) => b.id - a.id); // Sort transactions in descending order
       setTransactions(filteredTransactions);
+      console.log(filteredTransactions)
     } catch (error) {
       console.error("Error fetching transactions:", error);
       toast.error("Error fetching transactions");

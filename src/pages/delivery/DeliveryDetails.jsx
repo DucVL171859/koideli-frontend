@@ -267,7 +267,7 @@ const CreateTimeline = () => {
           ...matchedOrder,
           isShipping: "Completed",
         });
-        toast.success(`Order status updated to Completed`);
+        toast.success(`Đơn hàng đã được Giao hàng Thành công!!`);
         getOrderInTimeline(); // Refresh the timeline data
       } catch (error) {
         console.error("Failed to update order status:", error);

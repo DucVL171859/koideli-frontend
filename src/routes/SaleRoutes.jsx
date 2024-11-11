@@ -9,7 +9,6 @@ const OrderUpdate = Loadable(lazy(() => import('pages/sale/OrderUpdate')));
 const OrderDetail = Loadable(lazy(() => import('pages/sale/OrderDetail')));
 const Timeline = Loadable(lazy(() => import('pages/sale/Timeline')));
 const Blogs = Loadable(lazy(() => import('pages/sale/Blogs')));
-const Tasks = Loadable(lazy(() => import('pages/sale/Tasks')));
 
 const SaleRoutes = {
     path: '/sale',

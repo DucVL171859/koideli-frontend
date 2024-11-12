@@ -25,8 +25,9 @@ import koiFishServices from 'services/koiFishServices';
 import orderDetailServices from 'services/orderDetailServices';
 import boxOptionServices from 'services/boxOptionServices';
 import distanceServices from 'services/distanceServices';
-import { CloseOutlined } from '@mui/icons-material';
+import { CloseOutlined, DeleteOutline } from '@mui/icons-material';
 import { toast } from 'react-toastify';
+import { PriceFormat } from 'utils/tools';
 
 const OrderUpdate = () => {
     const { slug } = useParams();
@@ -451,6 +452,7 @@ const OrderUpdate = () => {
                                 <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }}>Loại Hộp</TableCell>
                                 <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Chi phí từ Nhật</TableCell>
                                 <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Chi phí trong nước</TableCell>
+                                <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Giá hộp nội địa</TableCell>
                                 <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Loại Cá Được Đóng Gói</TableCell>
                                 <TableCell sx={{ bgcolor: 'rgb(241 141 154 / 87%)' }} align="right">Tổng thể tích cá/hộp</TableCell>
                             </TableRow>
@@ -463,18 +465,13 @@ const OrderUpdate = () => {
                                         {boxOption.boxName && boxOption.boxName.includes('JP') ? `${boxOption.price.toLocaleString()} VND` : '0 VND'}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {(() => {
-                                            let newPrice = 0;
-                                            if (boxOption.boxName) {
-                                                if (boxOption.boxName.includes('Medium')) {
-                                                    newPrice = distance.price + 150000;
-                                                } else if (boxOption.boxName.includes('Large')) {
-                                                    newPrice = distance.price + 350000;
-                                                }
-                                            }
-                                            return newPrice.toLocaleString();
-                                        })()} VND
-                                    </TableCell>
+                      <PriceFormat price={distance.price} />
+                    </TableCell>
+                    <TableCell align="right">
+                      {boxOption.boxName && boxOption.boxName.includes("VN")
+                        ? `${boxOption.price.toLocaleString()} VND`
+                        : "0 VND"}
+                    </TableCell>
                                     <TableCell align="right">
                                         {boxOption.fishes.map((fish) => (
                                             <Box key={fish.fishId}>

@@ -18,12 +18,30 @@ import MainCard from 'components/MainCard';
 import { useNavigate } from 'react-router-dom';
 import orderServices from 'services/orderServices';
 import boxOptionServices from 'services/boxOptionServices';
-import { translateStatusToVietnamese } from 'utils/tools';
 
 const Order = () => {
     const navigate = useNavigate();
     const [order, setOrder] = useState([]);
-    const [statusFilter, setStatusFilter] = useState('Pending');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [paymentFilter, setPaymentFilter] = useState('All');
+
+    const statusMessages = {
+        Pending: 'Đơn hàng mới',
+        Approved: 'Đã xác nhận',
+        Packed: 'Chờ sắp xếp chuyến',
+        Delivering: 'Đang vận chuyển',
+        Completed: 'Đã giao thành công',
+        Cancelled: 'Giao không thành công',
+    };
+
+    const statusColors = {
+        Pending: '#e69b4b',
+        Approved: '#4186f9',
+        Packed: '#ab935e',
+        Delivering: '#4a89d7',
+        Completed: '#79ff00',
+        Cancelled: '#ff072e',
+    };
 
     useEffect(() => {
         const getOrder = async () => {
@@ -55,48 +73,44 @@ const Order = () => {
     };
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'Pending':
-                return '#f0ad4e';
-            case 'Approved':
-                return '#5cb85c';
-            case 'Packed':
-                return '#d9534f';
-            case 'Delivering':
-                return '#79bdcc';
-            case 'Completed':
-                return '#5bc0de';
-            case 'Cancelled':
-                return '#d9534f';
-            default:
-                return 'gray';
-        }
-    };
-
-    const handleFilterChange = (event) => {
-        setStatusFilter(event.target.value);
+        return statusColors[status] || 'gray';
     };
 
     const filteredOrders = order.filter((o) => {
-        return statusFilter === 'All' || o.isShipping === statusFilter;
+        let isStatusMatch = statusFilter === 'All' || o.isShipping === statusFilter;
+        let isPaymentMatch = paymentFilter === 'All' || (paymentFilter === 'Paid' ? o.isPayment : !o.isPayment);
+        return isStatusMatch && isPaymentMatch;
     });
 
     return (
         <>
-            <FormControl variant="outlined" sx={{ mb: 2 }}>
-                <InputLabel>Status</InputLabel>
+            <FormControl variant="outlined" sx={{ mb: 2, mr: 2 }}>
+                <InputLabel>Trạng thái đơn hàng</InputLabel>
                 <Select
                     value={statusFilter}
-                    onChange={handleFilterChange}
-                    label="Status"
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    label="Trạng thái đơn hàng"
                 >
                     <MenuItem value="All">Tất cả đơn hàng</MenuItem>
                     <MenuItem value="Pending">Đơn hàng mới</MenuItem>
-                    <MenuItem value="Approved">Đơn hàng đã xác nhận</MenuItem>
-                    <MenuItem value="Packed">Đơn hàng chờ sắp xếp vận chuyển</MenuItem>
-                    <MenuItem value="Delivering">Đơn hàng đang vận chuyển</MenuItem>
-                    <MenuItem value="Completed">Đơn hàng đã vận chuyển</MenuItem>
-                    <MenuItem value="Cancelled">Đơn hàng đã từ chối</MenuItem>
+                    <MenuItem value="Approved">Đã xác nhận</MenuItem>
+                    <MenuItem value="Packed">Chờ sắp xếp chuyến</MenuItem>
+                    <MenuItem value="Delivering">Đang vận chuyển</MenuItem>
+                    <MenuItem value="Completed">Đã giao thành công</MenuItem>
+                    <MenuItem value="Cancelled">Giao không thành công</MenuItem>
+                </Select>
+            </FormControl>
+
+            <FormControl variant="outlined" sx={{ mb: 2 }}>
+                <InputLabel>Thanh toán</InputLabel>
+                <Select
+                    value={paymentFilter}
+                    onChange={(e) => setPaymentFilter(e.target.value)}
+                    label="Thanh toán"
+                >
+                    <MenuItem value="All">Tất cả</MenuItem>
+                    <MenuItem value="Paid">Đã thanh toán</MenuItem>
+                    <MenuItem value="Unpaid">Chưa thanh toán</MenuItem>
                 </Select>
             </FormControl>
 
@@ -107,8 +121,8 @@ const Order = () => {
                             <TableRow>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Người nhận</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Địa chỉ người nhận</TableCell>
-                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Số lượng cá</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Trạng thái</TableCell>
+                                <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Thanh toán</TableCell>
                                 <TableCell sx={{ color: '#FFF', fontWeight: 600 }}>Hành động</TableCell>
                             </TableRow>
                         </TableHead>
@@ -117,7 +131,6 @@ const Order = () => {
                                 <TableRow key={order.id}>
                                     <TableCell>{`${order.receiverName} / ${order.receiverPhone}`}</TableCell>
                                     <TableCell>{order.receiverAddress}</TableCell>
-                                    <TableCell>{order.quantity}</TableCell>
                                     <TableCell>
                                         <Box display="flex" alignItems="center">
                                             <Box
@@ -129,8 +142,11 @@ const Order = () => {
                                                     marginRight: '8px',
                                                 }}
                                             />
-                                            {translateStatusToVietnamese(order.isShipping)}
+                                            {statusMessages[order.isShipping]}
                                         </Box>
+                                    </TableCell>
+                                    <TableCell>
+                                        {order.isPayment ? 'Đã thanh toán' : 'Chưa thanh toán'}
                                     </TableCell>
                                     <TableCell>
                                         <Button
